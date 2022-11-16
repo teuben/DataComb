@@ -7,8 +7,9 @@ Two datasets marked by a '*' did not get used, although "papersky" was available
 by some that it worked. The SDINT method that was 
 
 
-1) M100 from casaguides
-   --------------------
+1) M100 (casaguides)
+   -----------------
+
 The https://casaguides.nrao.edu/index.php/M100_Band3_Combine_6.2 casaguide walks you through
 a feather combination. We will also provide this example for the other combination methods,
 so they can be compared.
@@ -55,9 +56,15 @@ The new 2022 link to the DataComb data is via ftp or http (they are identical)
 
 In here you will find the following files:
 
-    skymodel.fits                    original skymodel plus two fuzzy "point" sources
-                                     formerly called skymodel-b.fits
-    skymodel.sim.tar                 MS simulation files from Toshi (large: 7GB)
+    skymodel-b.fits                  original skymodel plus two fuzzy "point" sources
+    skymodel-c.fits                  skymodel with a different random seed, same powerlaw as 'b'
+    skymodel-b.sim.tar               MS simulation files from Toshi (large: 7GB)
+    skymodel-c.sim.tar	             MS sim files
+    pointSrc_gaussOnly.sim.tar       MS sim files
+    pointSrc_pointOnly.sim.tar       MS sim files
+    pointSrc_pointSrcGauss.sim.tar   MS sim files
+    qac_bench5.tar.gz                M100 data : 70 channels at 5 km/s for 12m, 7m and TP
+
 
 The skymodel model data are big, but best solved by placing them in data as well (or a link)
 Examples:
