@@ -4,9 +4,9 @@
 ## Created: Feb. 2020
 ## Last modified: Nov. 2020
 ## Authors:
-##  1.- Genearal IQA tests: Alvaro Hacar (alvaro.hacar@univie.ac.at)
-##  2.- Power spectra: Nickolas Pingel (Nickolas.Pingel@anu.edu.au), Dirk Petry (dpetry@eso.org)
-##  3.- Aperture methods: Brian Mason (bmason@nrao.edu), Alvaro Hacar (alvaro.hacar@univie.ac.at)
+##  1.- General IQA tests: Alvaro Hacar (alvaro.hacar@univie.ac.at)
+##  2.- Power spectra:     Nickolas Pingel (Nickolas.Pingel@anu.edu.au), Dirk Petry (dpetry@eso.org)
+##  3.- Aperture methods:  Brian Mason (bmason@nrao.edu), Alvaro Hacar (alvaro.hacar@univie.ac.at)
 ##
 #########################################################
 
@@ -20,11 +20,11 @@
 
 ## keywords
 ##
-## FITSfile = path to FITS file
-## convo_file = path to CASA image to be convolved
-## beam_final = final beamsize (in arcsec)
+## FITSfile     = path to FITS file
+## convo_file   = path to CASA image to be convolved
+## beam_final   = final beamsize (in arcsec)
 ## target_image = target image (e.g., Interferometric image)
-## ref_image = reference image (e.g., TP image)
+## ref_image    = reference image (e.g., TP image)
 ##
 
 ##-------------------------------------------------------
