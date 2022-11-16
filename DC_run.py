@@ -1,5 +1,6 @@
 # do not modify the parameters in this script, instead use DC_pars.py
-# See DC_script.py for an example how to use this script
+# See DC_script.py for an example how to use this script,
+# users typically do not run this script directly
 
 # After DC_pars.py defines the parameters this script works in two steps:
 #   - set up the filenames for a convention we use in the DC project
@@ -53,7 +54,7 @@ print('### ')
 if dryrun==True:
     print('Collecting filenames for assessment of ...')   
 else:     
-    print('Executing ...')    
+    print('Will be executing the following steps ...')    
 for mystep in thesteps:
     print('step ', mystep, step_title[mystep])
     
