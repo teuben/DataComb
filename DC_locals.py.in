@@ -5,12 +5,8 @@
 
 _s4p      = '@S4P@/'        # the S4P scripts directory
 
-_s4p_data = '@S4P_DATA@/'   # the S4P data directory, read only from here?
-_s4p_work = '@S4P_WORK@/'   # the S4P work directory, write here?
-
-#  Lydia's original names
-pathtoconcat = '/vol/arc3/data1/arc2_data/moser/DataComb/DCSlack/ToshiSim/skymodel-c.sim/skymodel-c_120L/'   # path to the folder with the files to be concatenated
-pathtoimage  = '/vol/arc3/data1/arc2_data/moser/DataComb/DCSlack/DC_Ly_tests/'                          # path to the folder where to put the combination and image results
+_s4p_data = '@S4P_DATA@/'   # the S4P data directory, should be read only from here!
+_s4p_work = '@S4P_WORK@/'   # the S4P work directory, you can write here!
 
 # reuse them, but we should move to use the S4P variables
 pathtoconcat = _s4p_data     # e.g. _s4p_data/skymodel-c.sim/skymodel-c_120L  is the root directory
@@ -55,5 +51,5 @@ if not function_exists('sdintimaging'):
 
 
 print("Setup of @S4P@ complete for python3 only")
-print("S4P_DATA = @S4P_DATA@")
-print("S4P_WORK = @S4P_WORK@")
+print("S4P_DATA = @S4P_DATA@ (read only)")
+print("S4P_WORK = @S4P_WORK@ (read/write)")
