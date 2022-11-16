@@ -201,6 +201,7 @@ def derive_maxscale(vis, restfreq=''):
     # following ALMA technical handbook:
     # maximum recoverable scale = 0.983* lambda[m]/5th_percentile_baseline[m]*206265.
     c=2.99*10**8
+    c=299792458.0
     freq= float(repfreq)
     radiantoarcsec = 3600. * 180 / np.pi
     
@@ -221,9 +222,8 @@ def derive_maxscale(vis, restfreq=''):
 
 ##########################################
 
-def report_mask(usemask, mask, pbmask, niter       
-                ):
-
+def report_mask(usemask, mask, pbmask, niter):
+    
     """
     report selected mask used for tclean/sdint (Moser-Fischer, L.)
     a helper for runsdintimg and runtclean
@@ -439,10 +439,10 @@ def check_prep_tclean_param(
                    specmode=specmode,
                    deconvolver=mydeconvolver,
                    scales=myscales,
-                   nterms=1,                  # nterms=1 turns mtmfs into mfs, CASA 6.2 needs nterms=2 to run (bug?)
+                   nterms=1,                   # nterms=1 turns mtmfs into mfs, CASA 6.2 needs nterms=2 to run (bug?)
                    start=start,
                    width=width,
-                   nchan = nchan, #numchan, 
+                   nchan = nchan,              # numchan, 
                    restfreq=therf,
                    gridder='mosaic',          
                    weighting = weightingscheme,
@@ -3368,7 +3368,7 @@ def create_TP2VIS_ms(imTP=None, TPresult=None,
         rms = cont_RMS
  
         print('Deriving TP.ms using image rms')
-        print('rms in image:', rms) 
+        print('rms in image:',rms) 
         t2v.tp2vis(imTP,TPresult,TPpointinglist,nvgrp=5,rms=rms)# winpix=3)  # in CASA 6.x
         #print('Deriving TP.ms from deconvolved image')        
         #t2v.tp2vis(imTP,TPresult,TPpointinglist,deconv=True,maxuv=10,nvgrp=4)
