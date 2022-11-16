@@ -9,13 +9,11 @@ by some that it worked. The SDINT method that was
 
 1) M100 from casaguides
    --------------------
+The https://casaguides.nrao.edu/index.php/M100_Band3_Combine_6.2 casaguide walks you through
+a feather combination. We will also provide this example for the other combination methods,
+so they can be compared.
 
-The https://casaguides.nrao.edu/index.php/M100_Band3_Combine_5.4 casaguide walks you through
-a feather combination. We will also try to provide this example for the other combination
-methods.
-
-
-To get the full data, see also https://casaguides.nrao.edu/index.php/M100_Band3#Obtaining_the_Data
+To get the full data, see https://casaguides.nrao.edu/index.php/M100_Band3#Obtaining_the_Data
 
 For EA use:  https://alma-dl.mtk.nao.ac.jp/ftp/alma/sciver/
     EU use:  https://almascience.eso.org/almadata/sciver/
@@ -30,11 +28,9 @@ you will need the 12m, 7m and TP data, e.g. in NA (replace the stem of the URL w
   wget https://bulk.cv.nrao.edu/almadata/sciver/M100Band3ACA/M100_Band3_7m_CalibratedData.tgz
   wget https://bulk.cv.nrao.edu/almadata/sciver/M100Band3ACA/M100_Band3_ACA_ReferenceImages_5.1.tgz
 
-This totals 24GB and we will have this on a USB.
-
 An alternative can be a single large tar file
 
-  wget https://ftp.astro.umd.edu/pub/teuben/DC2019/M100_big.tar
+  wget https://ftp.astro.umd.edu/pub/teuben/DataComb/M100_big.tar
 
 if the archives are too cumbersome.
 
@@ -52,24 +48,18 @@ TP2VIS: https://github.com/tp2vis/distribute/blob/master/example1.md   needs to 
 2) skymodel GMC fractal/powerspectrum (Koda)
    -----------------------------------------
 
-The new 2020 link to the DC2019 data is via ftp or http (they are identical)
+The new 2022 link to the DataComb data is via ftp or http (they are identical)
 
-      https://ftp.astro.umd.edu/pub/teuben/DC2019
-      https://ftp.astro.umd.edu/pub/teuben/DC2019/scripts4paper
-      (local at UMD) /n/ftp/pub/teuben/DC2019
+      https://ftp.astro.umd.edu/pub/teuben/DataComb
+      (local at UMD) /n/ftp/pub/teuben/DataComb
 
 In here you will find the following files:
 
-    skymodel-b.fits                  original skymodel plus two fuzzy "point" sources
-    skymodel-c.fits                  skymodel with a different random seed, same powerlaw as 'b'
-    skymodel-b.sim.tar               MS simulation files from Toshi (large: 7GB)
-    skymodel-c.sim.tar	             MS sim files
-    pointSrc_gaussOnly.sim.tar       MS sim files
-    pointSrc_pointOnly.sim.tar       MS sim files
-    pointSrc_pointSrcGauss.sim.tar   MS sim files
-    qac_bench5.tar.gz                M100 data : 70 channels at 5 km/s for 12m, 7m and TP
+    skymodel.fits                    original skymodel plus two fuzzy "point" sources
+                                     formerly called skymodel-b.fits
+    skymodel.sim.tar                 MS simulation files from Toshi (large: 7GB)
 
-Toshi's models are big, but best solved by placing them in dc2019/data as well (or a link)
+The skymodel model data are big, but best solved by placing them in data as well (or a link)
 Examples:
 
         gmcSkymodel/gmc_2L/                   an older - kind of wrong - but small < 1GB data for testing
@@ -77,32 +67,9 @@ Examples:
         skymodel-c.sim/skymodel-c_120L        full 8GB multi-day dataset
 
 
-You will find some old links (but same data) here:
-
-http://admit.astro.umd.edu/~teuben/QAC/skymodel.fits
-http://admit.astro.umd.edu/~teuben/QAC/skymodel-a.fits    
-http://admit.astro.umd.edu/~teuben/QAC/skymodel-b.fits    
-http://admit.astro.umd.edu/~teuben/QAC/skymodel-c.fits    
-http://admit.astro.umd.edu/~teuben/QAC/skymodel-d.fits    
-http://admit.astro.umd.edu/~teuben/QAC/skymodel.ptg     
-http://admit.astro.umd.edu/~teuben/QAC/qac_bench5.tar.gz
-
-These are from the old 4096 x 4096 models.  The skymodel.fits
-is the original one, we added (two) 0.1 Jy point sources (see
-header where) to check how well they are recoverable.
-
-We have:
-    skymodel-a.fits       original skymodel plus real point sources - not used
-    skymodel-b.fits       original skymodel plus two fuzzy "point" sources
-    skymodel-c.fits       skymodel with a different random seed, same powerlaw as 'b'
-    skymodel-d.fits       skymodel with a different random seed, same powerlaw as 'b'
-    skymodel-e.fits       skymodel with different powerlaw, same seed as 'c'
-
 A newer 16k x 16k model, and associate pre-computed MS, available
 here:
 
 https://ftp.astro.umd.edu/pub/teuben/tp2vis/skymodel_16k.fits
 https://ftp.astro.umd.edu/pub/teuben/tp2vis/tp2vis-sample2.tar.gz
 
-
-Older data link:       https://ftp.astro.umd.edu/pub/teuben/DC2019/scripts4paper
