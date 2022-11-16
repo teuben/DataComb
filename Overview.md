@@ -9,6 +9,7 @@ Assessment
 
 It should be noted that this version will only support CASA 6. 
 NEW:
+
 * CASA < 6.1.2.7: problems with analysisUtils
 * CASA = 6.1.2.7: full functionallity of all combination methods, but no weighting=briggsbwtaper of cubes available yet
 * 6.1.2.7 < CASA < 6.4.4: weighting=briggsbwtaper available and switched on for all methods except from sdintimaging (not yet implemented; use weighting=briggs instead); sdintimaging does not work for continuum images anymore
@@ -18,8 +19,8 @@ NEW:
 
 The **DC_run.py** combines your interferometric and single dish (SD)/total power (TP) data.
 It uses the **datacomb.py**, **tp2vis.py**, and  **IQA_script.py** 
-module. The DC_run's goal is to provide a homogeneous 
-input to all combination methods (e.g. clean parameters), a homogeneous output 
+module. The DC_run's goal is to provide a uniform
+input to all combination methods (e.g. clean parameters), a uniform output 
 style, and a quality analysis.
 
 It offers several different actions to be selected via the python 'thesteps' list set in **DC_pars.py**
@@ -64,9 +65,9 @@ Example:
 
 Various **USER INPUTS**, which you should all find in **DC_pars.py**, 
 are described in 
-[DC_pars](https://github.com/teuben/dc2019/blob/master/scripts4paper/DC_pars.md). 
+[DC_pars](https://github.com/teuben/DataComb/blob/main/DC_pars.md). 
 Details on the work-flow of core-script **DC_run.py** are given in
-[DC_run](https://github.com/teuben/dc2019/blob/master/scripts4paper/DC_run.md). 
+[DC_run](https://github.com/teuben/DataComb/blob/main/DC_run.md). 
 
 
 
