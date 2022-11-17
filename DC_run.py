@@ -799,16 +799,23 @@ if mystep in thesteps:
             TPnoiseChannels=TPnoiseChannels)  
 
 
-    # bring TP.ms and INT.ms on same spectral reference frame before tclean 
+    # bring TP.ms and INT.ms on same spectral reference frame before tclean
+    #
+    # models typically do not need this, so we have a new (but optional)
+    # no_transform = True variable in DC_pars.py
     
     transvis = vis+'_LSRK' 
 
     if dryrun == True:
         pass
     else:
-        dc.transform_INT_to_SD_freq_spec(TPresult, imTP, vis, 
-            transvis, datacolumn='DATA', outframe='LSRK')  
-
+        if not 'no_transform' in locals():
+            no_transform = False
+        if not no_transform:
+            dc.transform_INT_to_SD_freq_spec(TPresult, imTP, vis, 
+                                             transvis, datacolumn='DATA', outframe='LSRK')
+        else:
+            transvis = vis
 
     # make TP2VIS image (tclean)
     
