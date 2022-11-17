@@ -17,10 +17,10 @@ step_title = {0: 'Concat',
               }              
 
 thesteps=[0,1,2,3,4,5,6,7,8]
-thesteps=[0,1,2,3,4,5,7]
 
-dryrun = False    # False to execute combination, True to gather filenames only
- 
+dryrun = False         # False to execute combination, True to gather filenames only
+
+no_transform = True    # models do no need a transform to align SD and INT
 
 
 
