@@ -108,3 +108,17 @@ execfile("/users/user/DataComb/DC_locals.py")
 ```
 
 where the path should be the path to where `DC_locals.py` is on your machine.
+
+## Benchmark
+
+Some of these tests take a long time (many hours), so for the GMC skymodel-b we have a shortened
+version (GMC-bench) that will run with fewer data and fewer iterations, just to validate the process
+(choises of CASA, analysisUtils and astropy could play a role here). 
+
+
+```python
+    !cp DC_pars-GMC-bench.py DC_pars.py
+    execfile("DC_script.py")
+```
+
+
