@@ -81,15 +81,20 @@ print(' ')
 
 
 
-### put together file names and weights for concat
+### put together file names and weights for concat, we allow 12m or 7m to be absent
 thevis = []
-thevis = a12m
-thevis.extend(a7m)
-
 weightscale = []
-weightscale = weight12m
-weightscale.extend(weight7m)
 
+for i in range(len(a12m)):
+    if weight12m[i] > 0:
+        print("CONCAT will be using",a12m[i])
+        thevis.append(a12m[i])
+        weightscale.append(weight12m[i])
+for i in range(len(a7m)):
+    if weight7m[i] > 0:
+        print("CONCAT will be using",a7m[i])
+        thevis.append(a7m[i])
+        weightscale.append(weight7m[i])
 
 
 ### define ms-file to perform combination on and file check 
