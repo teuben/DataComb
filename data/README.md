@@ -73,6 +73,9 @@ Examples:
         skymodel-b.sim/skymodel-b_120L        full 8GB multi-day dataset
         skymodel-c.sim/skymodel-c_120L        full 8GB multi-day dataset
 
+Also note that the code to generate the simulations is available inside the dataset, with the
+comment that these were produced with CASA 5.6.1
+
 
 A newer 16k x 16k model, and associate pre-computed MS, available
 here:
