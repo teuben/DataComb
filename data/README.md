@@ -1,12 +1,13 @@
-# Dataset that have been used for DataComb (Plunkett et al. 2023)
+# Dataset used for DataComb (Plunkett et al. 2023)
 
-1) M100 (from Casaguides)          
-2) Skymodel GMC fractal/power spectrum (Koda et al. 2019) 
-3) ... More datasets have been tested, and may be documented in the future
+### List of datasets:
+1) M100 - observation        
+2) "Skymodel" - model and simulation
+  -----------------
 
 
-1) M100 (Casaguides)
-   -----------------
+
+# 1) M100 (Casaguides)
 
 The https://casaguides.nrao.edu/index.php/M100_Band3_Combine_6.2 Casaguide walks you through
 a combination with Feather. We utilize the same dataset for Feather and for the other combination methods,
@@ -42,8 +43,9 @@ For testing purposes, another reason for this trimmed version is to ensure that 
 some programs (certainly in the past) could not deal with data sorted differently by frequency.
 
 
-2) skymodel GMC fractal/powerspectrum (Koda)
-   -----------------------------------------
+# 2) "Skymodel"
+
+These data follow the method described by Koda et al. (2019) to generate a model representative of a GMC, with a power spectrum distribution of emission.  Then we inserted two "point sources."  Simulated observations were generated, as described in Plunkett et al. (2023). 
 
 The new (since 2022) link to the DataComb data is via ftp or http (they are identical)
 
@@ -79,3 +81,6 @@ here:
 https://ftp.astro.umd.edu/pub/teuben/tp2vis/skymodel_16k.fits
 https://ftp.astro.umd.edu/pub/teuben/tp2vis/tp2vis-sample2.tar.gz
 
+# Other
+
+_More datasets have been tested, and may be documented in the future._
