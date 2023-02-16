@@ -1,17 +1,15 @@
-# Dataset that have been used for DataComb
+# Dataset that have been used for DataComb (Plunkett et al. 2023)
 
-1) M100 (casaguides)          
-2) Skymodel GMC fractal/powerspectrum (Koda) 
-
-Two datasets marked by a '*' did not get used, although "papersky" was available and was tested
-by some that it worked. The SDINT method that was 
+1) M100 (from Casaguides)          
+2) Skymodel GMC fractal/power spectrum (Koda et al. 2019) 
+3) ... More datasets have been tested, and may be documented in the future
 
 
-1) M100 (casaguides)
+1) M100 (Casaguides)
    -----------------
 
-The https://casaguides.nrao.edu/index.php/M100_Band3_Combine_6.2 casaguide walks you through
-a feather combination. We will also provide this example for the other combination methods,
+The https://casaguides.nrao.edu/index.php/M100_Band3_Combine_6.2 Casaguide walks you through
+a combination with Feather. We utilize the same dataset for Feather and for the other combination methods,
 so they can be compared.
 
 To get the full data, see https://casaguides.nrao.edu/index.php/M100_Band3#Obtaining_the_Data
@@ -39,17 +37,15 @@ if the archives are too cumbersome.
 
 We are also planning on a trimmed version of these big data to immediately jump into data combination.
 See http://admit.astro.umd.edu/~teuben/QAC/qac_bench5.tar.gz with trimmed M100 data, good for the
-QAC benchmark. These are the gridded to the 70 channels the TP data were available as.
-Another reason for this trimmed version is to ensure that all data have been sorted correctly, as
-some programs (certainly in the past) could not deal with sorted differently by frequency.
-
-TP2VIS: https://github.com/tp2vis/distribute/blob/master/example1.md   needs to be updated
+QAC benchmark. These are gridded to the same 70 channels corresponding to the TP data.
+For testing purposes, another reason for this trimmed version is to ensure that all data have been sorted correctly, as
+some programs (certainly in the past) could not deal with data sorted differently by frequency.
 
 
 2) skymodel GMC fractal/powerspectrum (Koda)
    -----------------------------------------
 
-The new 2022 link to the DataComb data is via ftp or http (they are identical)
+The new (since 2022) link to the DataComb data is via ftp or http (they are identical)
 
       https://ftp.astro.umd.edu/pub/teuben/DataComb
       (local at UMD) /n/ftp/pub/teuben/DataComb
@@ -74,7 +70,7 @@ Examples:
         skymodel-c.sim/skymodel-c_120L        full 8GB multi-day dataset
 
 Also note that the code to generate the simulations is available inside the dataset, with the
-comment that these were produced with CASA 5.6.1
+comment that these were produced with CASA 5.6.1.
 
 
 A newer 16k x 16k model, and associate pre-computed MS, available
