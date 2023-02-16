@@ -1,28 +1,13 @@
 # Data Combination Project
 
-1. If you want to get an image go to quick_start.md,
-2. if you want to understand the steps go to Overview.md,
-3. if you are more advanced and want to start playing with the parameters to hone in your data combination go to DC_pars?
-
-General overview.md
-X Preparation.md (only once)
-Quick_start.md
-DC_pars.md – link to Template_pars.py and explain
-DC_run.md
-
-
-
-
-
-
-
-
+1. If you want to (more quickly) get combined images, go directly to [Quick_start.md](Quick_start.md),
+2. If you want to understand the steps, go to [Overview.md](Overview.md),
+3. [Advanced users] If you want adjust parameters and perform data combination on your own data, go to [DC_pars.md](DC_pars.md).
 
 
 # Scripts for the Paper
 
-These should be the steps that allow you to reproduce the
-figures in the paper:
+These should be the steps that allow you to reproduce the data combination as presented in Plunkett et al. (2023):
 
 1. Ensure your CASA has **astropy** installed
 2. Ensure the **analysisUtilities** are installed for your CASA
@@ -34,7 +19,7 @@ figures in the paper:
    
 ## 1. - 3. Preparations
 Details are given in [Preparation](https://github.com/teuben/DataComb/blob/master/Preparation.md)
-You have to make these adjustments just once.
+You have to make these adjustments *just once*.
 
 
 ## 4. Data
@@ -73,5 +58,8 @@ A quick start guide is given in	[Quick_start](Quick_start.md).
 **DC_run.py** uses the python module **datacomb.py** for preparation and combination 
 of the data and the python module **IQA_script.py** for the assessment of the combination products. 
 Both modules can be used as a stand-alone.
+
+General overview.md
+DC_run.md
 
 
