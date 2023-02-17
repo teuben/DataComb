@@ -18,7 +18,8 @@ These should be the steps that allow you to reproduce the data combination as pr
 
    
 ## 1. - 3. Preparations
-Details are given in [Preparation](https://github.com/teuben/DataComb/blob/master/Preparation.md)
+Details are given in [Preparation](https://github.com/teuben/DataComb/blob/master/Preparation.md).
+
 You have to make these adjustments *just once*.
 
 
