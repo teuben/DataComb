@@ -1,15 +1,19 @@
 # Dataset used for DataComb (Plunkett et al. 2023)
 
 ### List of datasets:
-1) M100 - observation        
-2) "Skymodel" - model and simulation
+1) M100 - ALMA observations from Casaguide      
+2) "Skymodel" - model and simulated ALMA observations
+
+
+For the example, the setup assumes that the data is present in **data**, physically or via a (sym)link. If you cloned this Github repository, then the **data** directory should already exist. You can modify this for your system as needed.
+
   -----------------
 
 
 
-# 1) M100 (Casaguides)
+# 1) M100
 
-This [M100 Band3 Casaguide](https://casaguides.nrao.edu/index.php/M100_Band3_Combine_6.2] walks you through
+This [M100 Band3 Casaguide](https://casaguides.nrao.edu/index.php/M100_Band3_Combine_6.2) walks you through
 a combination with Feather. We utilize the same dataset for Feather and for the other combination methods,
 so they can be compared.
 
