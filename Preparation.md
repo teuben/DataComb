@@ -67,19 +67,19 @@ We recommend putting all datasets in one directory and all output
 files and images in another, then you only have to run `configure`
 once. For example, let's say you plan to work with the M100 and GMC
 example datasets. You could have one directory for the input data
-`/users/user/DataComb/Data/` where you will have a M100 directory and
+`/users/user/DataComb/data/` where you will have a M100 directory and
 a GMC directory. And another for output files and images,
-`/users/user/DataComb/Output/` where you will have a M100 folder and a
+`/users/user/DataComb/output/` where you will have a M100 folder and a
 GMC folder.
 
 Then your configure statement would be
 
 ```bash
-./configure --with-s4p-work=/users/user/DataComb/Output --with-s4p-data=/users/user/DataComb/Data
+./configure --with-s4p-work=/users/user/DataComb/output --with-s4p-data=/users/user/DataComb/data
 ```
 
-This will place your working files in `/users/user/DataComb/Output/` and
-set `/users/user/DataComb/Data/` to be the directory where all the
+This will place your working files in `/users/user/DataComb/output/` and
+set `/users/user/DataComb/data/` to be the directory where all the
 input data are located (at least for the DataComb project). Use the
 --help argument to find out what other options might be useful for
 you.
