@@ -62,6 +62,13 @@ In here you will find the following files:
     pointSrc_pointOnly.sim.tar       MS sim files
     pointSrc_pointSrcGauss.sim.tar   MS sim files
     qac_bench5.tar.gz                M100 data : 70 channels at 5 km/s for 12m, 7m and TP
+    
+Examples for retrieving data:
+
+       wget https://ftp.astro.umd.edu/pub/teuben/DataComb/skymodel-b.fits 
+       wget https://ftp.astro.umd.edu/pub/teuben/DataComb/skymodel-c.fits
+       curl https://ftp.astro.umd.edu/pub/teuben/DataComb/skymodel-b.sim.tar | tar xf -
+       curl https://ftp.astro.umd.edu/pub/teuben/DataComb/skymodel-c.sim.tar | tar xf -
 
 
 The skymodel model data are big, but best solved by placing them in data as well (or a link)
