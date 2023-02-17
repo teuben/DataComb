@@ -26,25 +26,20 @@ CASA <1>: !pip3 install astropy
 ```
 If this results in some kind of permission related problem, you will need to ask the owner of CASA to do this. Just to be clear, we are using only python3 now, hence CASA 6. 
 
-**TBD** Unclear at this stage if/how a user based install will work, but we do need to provide a solution here. Another suggested solution is to add some kind of
+You can find more on installing astropy at [astropy:docs](https://docs.astropy.org/en/stable/install.html)
 
-```plain
-sys.path.append(pathtoastropy)
-```
-to your personal CASA setup (e.g. via `~/.casa/config.py`), but making sure there is no version skew between CASA's python and the one astropy is expecting.
-
-```plain
-CASA <1>: !pip3 install --user astropy
-```
 ### 3. analysisUtils
 
-[This CASA Guide](https://casaguides.nrao.edu/index.php/Analysis_Utilities) gives instructions on how to download and install analysisUtils. Here's our suggested example of installing it:
+[This CASA Guide](https://casaguides.nrao.edu/index.php/Analysis_Utilities) gives instructions on how to download and install analysisUtils. Here's an example of installing it:
 
 ```bash
 cd ~/.casa
 wget ftp://ftp.cv.nrao.edu/pub/casaguides/analysis_scripts.tar
 tar -xf analysis_scripts.tar
 ```
+
+As of January 2023, analysisUtils is available on [zenodo](https://zenodo.org/record/7502160) (DOI: 10.5281/zenodo.7502160).
+
 Then add the following lines to your `~/.casa/config.py` script:
 
 ```plain
@@ -52,18 +47,16 @@ import sys
 import os
 sys.path.append(os.environ['HOME'] + '/.casa/analysis_scripts')
 import analysisUtils as au
-import analysisUtils as aU
 ```
-TBD: casing
 
 
 ## Step 2: Configure
 
-Before running `DC_script.py`, you will first need configure your CASA
+Before running `DC_script.py`, you will first need to configure your CASA
 environment to set the script, data, and working directories that the
 scripts will use on your local machine, as opposed to the current
 defaults (it will expect your data to be locally present). One
-suggested solution is the use of the included `configure`, you need to
+suggested solution is the use of the included `configure.` You need to
 execute the `configure` script from the `scripts4paper` directory to
 set the directories
 
@@ -71,22 +64,22 @@ set the directories
 2. where the data you want to combine is located (`--with-s4p-data`).
 
 We recommend putting all datasets in one directory and all output
-files and images in another then you only have to run `configure`
+files and images in another, then you only have to run `configure`
 once. For example, let's say you plan to work with the M100 and GMC
 example datasets. You could have one directory for the input data
-`/users/user/datacomb/data/` where you will have a M100 directory and
+`/users/user/DataComb/Data/` where you will have a M100 directory and
 a GMC directory. And another for output files and images,
-`/users/user/datacomb/output/` where you will have a M100 folder and a
+`/users/user/DataComb/Output/` where you will have a M100 folder and a
 GMC folder.
 
 Then your configure statement would be
 
 ```bash
-./configure --with-s4p-work=/users/user/datacomb/output --with-s4p-data=/users/user/datacomb/data
+./configure --with-s4p-work=/users/user/DataComb/Output --with-s4p-data=/users/user/DataComb/Data
 ```
 
-will place your working files in `/users/user/datacomb/output/` and
-set `/users/user/datacomb/data/` to be the directory where all the
+This will place your working files in `/users/user/DataComb/Output/` and
+set `/users/user/DataComb/Data/` to be the directory where all the
 input data are located (at least for the DataComb project). Use the
 --help argument to find out what other options might be useful for
 you.
@@ -96,24 +89,24 @@ that you run `configure` in - this should be the directory where
 `DC_script.py` is.
 
 
-NOTE:  MAC users may need to install the needed command `realpath` via "brew install coreutils" for configure to work.
+NOTE:  Mac users may need to install the needed command `realpath` via "brew install coreutils" for configure to work.
 
 ## Step 3: (Optional but Recommended) Permanently Set Up Your CASA Environment
 
-We recommend to place your version of this the following line in your `~/.casa/config.py` file so that this is
+We recommend to place your version of the following line in your `~/.casa/config.py` file so that this is
 automatically done for each CASA session.
 
 ```python
 execfile("/users/user/DataComb/DC_locals.py")
 ```
 
-where the path should be the path to where `DC_locals.py` is on your machine.
+where the path should be the path to `DC_locals.py` on your machine.
 
 ## Benchmark
 
 Some of these tests take a long time (many hours), so for the GMC skymodel-b we have a shortened
 version (GMC-bench) that will run with fewer data and fewer iterations, just to validate the process
-(choises of CASA, analysisUtils and astropy could play a role here). 
+(choices of CASA, analysisUtils and astropy could play a role here). 
 
 
 ```python
