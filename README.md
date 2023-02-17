@@ -30,17 +30,9 @@ You have to make these adjustments *just once*.  Steps include:
 
 ## 4. Data
 
-Details are in [data/README.md](data/README.md)
+Details are in [data/README.md](data/README.md). 
 
-This suggests that the data is present in **data**, physically or via
-a (sym)link.   Example:
-
-
-       wget https://ftp.astro.umd.edu/pub/teuben/DC2019/skymodel-b.fits 
-       wget https://ftp.astro.umd.edu/pub/teuben/DC2019/skymodel-c.fits
-       curl https://ftp.astro.umd.edu/pub/teuben/DC2019/skymodel-b.sim.tar | tar xf -
-       curl https://ftp.astro.umd.edu/pub/teuben/DC2019/skymodel-c.sim.tar | tar xf -
-
+As suggested in [Preparation](Preparation.md), the setup assumes that the data is present in **data**, physically or via a (sym)link.  If you cloned this Github repository, then the **data** directory should already exist.  You can modify this for your system as needed.
 
 ## 5. DC_script.py, DC_run.py, and IQA_script.py
 
