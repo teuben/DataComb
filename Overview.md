@@ -1,29 +1,12 @@
-combo steps provided
-user gives clean and naming and combination parameter inputs
-level of flexibility
-Assessment
-
-
-
-
-
-It should be noted that this version will only support CASA 6. 
-NEW:
-
-* CASA < 6.1.2.7: problems with analysisUtils
-* CASA = 6.1.2.7: full functionallity of all combination methods, but no weighting=briggsbwtaper of cubes available yet
-* 6.1.2.7 < CASA < 6.4.4: weighting=briggsbwtaper available and switched on for all methods except from sdintimaging (not yet implemented; use weighting=briggs instead); sdintimaging does not work for continuum images anymore
-
-
-## DC_run overview
+## DataComb Scripts Overview
 
 The **DC_run.py** combines your interferometric and single dish (SD)/total power (TP) data.
 It uses the **datacomb.py**, **tp2vis.py**, and  **IQA_script.py** 
-module. The DC_run's goal is to provide a uniform
+modules. The DC_run's goal is to provide a uniform
 input to all combination methods (e.g. clean parameters), a uniform output 
 style, and a quality analysis.
 
-It offers several different actions to be selected via the python 'thesteps' list set in **DC_pars.py**
+It offers several different actions to be selected via the 'thesteps' list set in **DC_pars.py** (see [DC_pars](DC_pars.md))
 
 | step | purpose |
 | ------ | ------ |
@@ -36,7 +19,6 @@ It offers several different actions to be selected via the python 'thesteps' lis
 | 6 | SDINT |
 | 7 | TP2VIS |
 | 8 | Assessment of the combination results |
-
 
 
 
@@ -63,40 +45,38 @@ Example:
 * Q2:   need a function to reverse engineer this name  (par1,par2,....) = decode(filename)
 		  
 
-Various **USER INPUTS**, which you should all find in **DC_pars.py**, 
+Various **USER INPUTS**, which you should find in **DC_pars.py**, 
 are described in 
 [DC_pars](https://github.com/teuben/DataComb/blob/main/DC_pars.md). 
-Details on the work-flow of core-script **DC_run.py** are given in
+Details on the work-flow of the core-script **DC_run.py** are given in
 [DC_run](https://github.com/teuben/DataComb/blob/main/DC_run.md). 
 
+## Assessment
+A final step of this process is to provide plots and metrics for the quality assessment of the images made by each combination.  The procedure is explained in more detail in [DC_run](DC_run.md).  You can also run this step alone, loading products from a previous run. 
 
 
 ## Tips and tricks
-* Start with few **nit** (clean-interations in **DC_pars**-file) for quick look at what the products look like
-* Run step 0 only once per dataset
-* Only run step 1 the first time, then in following runs, only rerun step 1 for changes in the spectral or the masking setup
-* Play with all other steps
-* For running step 8 alone: activate combination steps of interest (2-7) and use dryrun=True (no active combination - just load products from previous runs)
-* If you just want the feedback on the rms and threshold that DC_run has derived from your DC_pars_* input, set ``thesteps`` to any step except from step 8 and ``dryrun = True``
-* In theory: Thanks to full paths the script can be executed in any arbitrary folder. Having several CASA instances started in the same folder makes them interfere with each other intermediate products (e.g. erase each other's *temp*-folders) leading to crashes. Therefore, execute each script in the corresponding output folder to stay safe.
-* Check path names in your DC_locals.py and DC_pars_*.py: A '/' too few or too many might be the reason for trouble.
+* Start with few **nit** (clean-interations in **DC_pars**-file) for a quick look at what the products look like.
+* Run step 0 only once per dataset.
+* Only run step 1 the first time, then in following runs, only rerun step 1 for changes in the spectral or the masking setup.
+* You can adjust parameters with all other steps for refined combinations.
+* For running step 8 alone: activate combination steps of interest (2-7) and use dryrun=True (no active combination - just load products from previous runs).
+* If you just want the feedback on the rms and threshold that DC_run has derived from your DC_pars_* input, set ``thesteps`` to any step except from step 8 and ``dryrun = True``.
+* In theory: Thanks to full paths, the script can be executed in any arbitrary folder. Having several CASA instances started in the same folder makes them interfere with each other's intermediate products (e.g. erase each other's *temp*-folders) leading to crashes. Therefore, execute each script in the corresponding output folder to stay safe.
+* Check path names in your DC_locals.py and DC_pars.py: A '/' too few or too many might be the reason for trouble.
 * In case of a poor PSF (blotchy sidelobes, often for 7m snapshot data)
       * automatically generated masks might let CLEAN diverge
-      * create interactive user mask by executing step 2 in ``interactive='IA'`` - mode and rename the resulting <tclean-product>.mask to another name, so that it does not get erased the next time step 2 is executed.
+      * create interactive user mask by executing step 2 with ``interactive='IA'`` (interactive mode) and rename the resulting <tclean-product>.mask to another name, so that it does not get erased the next time step 2 is executed.
       * execute DC_run from now on with ``masking = 'UM'`` and ``interactive = 'nIA'`` 
-        (NOT YET IMPLEMENTED!: and use few 100 of cycleniter. Faint emission might require cycleniter of few tens only!)
-* Unknown issue: We had hick-ups with data concatenated in another CASA version than DC_run was executed in. We recommend that you re-do the concatenation in DC-run, if the original data sets are accessible to you. 
+* Unknown issue: Some hick-ups were reported with data concatenated in another CASA version than that which DC_run was executed in. We recommend that you re-do the concatenation in DC_run, if the original data sets are accessible to you. 
 * Restarting CASA and or using a new shell can sometimes solve weird processing crashes.
+
   
-  
-NEW:
-* The clean instances are called in feedback mode, i.e. tclean/sdint returns a summary (stopping criterion, number of iterations executed, etc.) as a dictionary, that the datacomb-module stores in a pickle-file, and a plot of the cleaned model flux vs iteration number (under imname as defined above, with .pickle and .png as suffix, respectively. The plot is helpful to supervise the convergence-behaviour of the clean-instance: if the model flux jumps wildly, it helps to lower the number of minor iterations per major cycle via ``t_cycleniter``. Check the casalogger what cycleniters CASA has used/derived before, if ``t_cycleniter`` was set to -1.
+## New
+* The clean instances are called in feedback mode, i.e. tclean/sdint returns a summary (stopping criterion, number of iterations executed, etc.) as a dictionary, that the datacomb-module stores in a pickle-file, and a plot of the cleaned model flux vs iteration number (under imname as defined above, with .pickle and .png as suffix, respectively). The plot is helpful to supervise the convergence-behaviour of the clean-instance: if the model flux jumps wildly, it helps to lower the number of minor iterations per major cycle via ``t_cycleniter``. Check the casalogger to see what cycleniters CASA has used/derived before, if ``t_cycleniter`` was set to -1.
       
+It should be noted that this version will only support CASA 6. 
+* CASA < 6.1.2.7: possible problems with analysisUtils
+* CASA = 6.1.2.7: full functionality of all combination methods, but no weighting=briggsbwtaper of cubes available yet
+* 6.1.2.7 < CASA < 6.4.4: weighting=briggsbwtaper available and switched on for all methods except from sdintimaging (not yet implemented; use weighting=briggs instead); sdintimaging does not work consistently for continuum images in this version			
 
-## Flexibility
-
-
-
-
-
-## Assessment
