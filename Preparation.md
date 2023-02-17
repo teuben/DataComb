@@ -40,7 +40,7 @@ tar -xf analysis_scripts.tar
 
 As of January 2023, analysisUtils is available on [zenodo](https://zenodo.org/record/7502160) (DOI: 10.5281/zenodo.7502160).
 
-Then add the following lines to your `~/.casa/config.py` script:
+Then add the following lines to your `~/.casa/startup.py` script:
 
 ```plain
 import sys
@@ -93,7 +93,7 @@ NOTE:  Mac users may need to install the needed command `realpath` via "brew ins
 
 ## Step 3: (Optional but Recommended) Permanently Set Up Your CASA Environment
 
-We recommend to place your version of the following line in your `~/.casa/config.py` file so that this is
+We recommend to place your version of the following line in your `~/.casa/startup.py` file so that this is
 automatically done for each CASA session.
 
 ```python
