@@ -73,7 +73,7 @@ Examples for retrieving data:
     curl https://ftp.astro.umd.edu/pub/teuben/DataComb/skymodel-c.sim.tar | tar xf -
 
 
-The skymodel model data are big, but best solved by placing them in **data** as well (or a link)
+The "skymodel" model data are big, but best solved by placing them in **data** as well (or a link)
 Examples:
 
     skymodel-b.sim/skymodel-b_120L        full 8GB multi-day dataset
