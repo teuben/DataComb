@@ -41,23 +41,21 @@ once to set up your source and destination folders, e.g.
 
     execfile("/home/teuben/DataComb/DC_locals.py",globals())
 
-**DC_script.py** is a wrapper that calls the **DC_pars**-file you
-  defined in there and then the combination program **DC_run.py**.
+**DC_script.py** is simply a wrapper that first calls the **DC_pars**-file you
+  designate there, and then the combination program **DC_run.py**.
 
-Alternatively, you can call
+Alternatively, you can use these two lines to call:
 
-	execfile("/home/teuben/DataComb/DC_pars_M100.py", globals()) 
+	execfile("/home/teuben/DataComb/DC_pars.py", globals()) 
 	execfile("/home/teuben/DataComb/DC_run.py",globals())
 
-An overview of the capabilities of **DC_run.py** is given in [Overview](Overview.md) 
-and in more detail in [DC_run](DC_run.md).
-A quick start guide is given in	[Quick_start](Quick_start.md).
+For more on **DC_run.py**, you can find an overview of the capabilities given in [Overview](Overview.md), 
+and more detail in [DC_run](DC_run.md).  Templates of **DC_pars**-files are found in the templates directory.
 
-**DC_run.py** uses the python module **datacomb.py** for preparation and combination 
-of the data and the python module **IQA_script.py** for the assessment of the combination products. 
+**DC_run.py** uses the Python module **datacomb.py** for preparation and combination 
+of the data, and the Python module **IQA_script.py** for the assessment of the combination products. 
 Both modules can be used as a stand-alone.
 
-General overview.md
-DC_run.md
+A quick start guide is given in	[Quick_start](Quick_start.md).
 
 
