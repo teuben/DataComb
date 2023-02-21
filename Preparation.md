@@ -89,7 +89,7 @@ that you run `configure` in - this should be the directory where
 `DC_script.py` is.
 
 
-NOTE:  Mac users may need to install the needed command `realpath` via "brew install coreutils" for configure to work.
+**NOTE:**  Mac users may need to install the needed command `realpath` via "brew install coreutils" for configure to work. Pay attention if you see ```checking scripts4paper setup... ./configure: line 1751: realpath: command not found```
 
 ## Step 3: (Optional but Recommended) Permanently Set Up Your CASA Environment
 
