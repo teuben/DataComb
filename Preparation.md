@@ -49,6 +49,7 @@ sys.path.append(os.environ['HOME'] + '/.casa/analysis_scripts')
 import analysisUtils as au
 ```
 
+**Note:** You need a relatively new (as of January 2023) version of analysisUtils, that is compatible with CASA 6, in order for the commands that we use in DataComb to work.  Try ```au.version()```. Version 2.6 has been tested to work.
 
 ## Step 2: Configure
 
@@ -89,7 +90,7 @@ that you run `configure` in - this should be the directory where
 `DC_script.py` is.
 
 
-**NOTE:**  Mac users may need to install the needed command `realpath` via "brew install coreutils" for configure to work. Pay attention if you see ```checking scripts4paper setup... ./configure: line 1751: realpath: command not found```
+**Note:**  Mac users may need to install the needed command `realpath` via "brew install coreutils" for configure to work. Pay attention if you see ```checking scripts4paper setup... ./configure: line 1751: realpath: command not found```
 
 ## Step 3: (Optional but Recommended) Permanently Set Up Your CASA Environment
 
