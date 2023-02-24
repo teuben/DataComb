@@ -2,11 +2,11 @@
 ## Image Quality Assessment (IQA) scripts for CASA
 ##
 ## Created: Feb. 2020
-## Last modified: Nov. 2020
+## Last modified: Dec. 2022
 ## Authors:
-##  1.- General IQA tests: Alvaro Hacar (alvaro.hacar@univie.ac.at)
-##  2.- Power spectra:     Nickolas Pingel (Nickolas.Pingel@anu.edu.au), Dirk Petry (dpetry@eso.org)
-##  3.- Aperture methods:  Brian Mason (bmason@nrao.edu), Alvaro Hacar (alvaro.hacar@univie.ac.at)
+##  1.- Genearal IQA tests: Alvaro Hacar (alvaro.hacar@univie.ac.at)
+##  2.- Power spectra: Nickolas Pingel (Nickolas.Pingel@anu.edu.au), Dirk Petry (dpetry@eso.org)
+##  3.- Aperture methods: Brian Mason (bmason@nrao.edu), Alvaro Hacar (alvaro.hacar@univie.ac.at)
 ##
 #########################################################
 
@@ -20,11 +20,11 @@
 
 ## keywords
 ##
-## FITSfile     = path to FITS file
-## convo_file   = path to CASA image to be convolved
-## beam_final   = final beamsize (in arcsec)
+## FITSfile = path to FITS file
+## convo_file = path to CASA image to be convolved
+## beam_final = final beamsize (in arcsec)
 ## target_image = target image (e.g., Interferometric image)
-## ref_image    = reference image (e.g., TP image)
+## ref_image = reference image (e.g., TP image)
 ##
 
 ##-------------------------------------------------------
@@ -41,11 +41,29 @@ from numpy import inf
 from matplotlib.colors import LogNorm 
 from scipy.stats import kurtosis, skew
 
+
+
 #import casatools# as cto
 #import casatasks# as cta
 from casatasks import *
+from casatools import image as iatool
+
+ia = iatool()
 
 ## IQA colours
+#IQA_colours = ["red", "blue", "orange", "green" , "cyan", "pink", "brown","yellow","magenta","black"]
+## IQA colours (color blind friendly CMRmap scale)
+start = 0.0
+stop = 1.0
+number_of_lines= 8
+cm_subsection = np.linspace(start, stop, number_of_lines) 
+IQA_colours = [ plt.cm.CMRmap(x) for x in cm_subsection ]
+IQA_colours = IQA_colours[1:7]
+IQA_colours =  [IQA_colours[0],IQA_colours[5],IQA_colours[2],IQA_colours[4],IQA_colours[1],IQA_colours[3]]
+
+
+IQA_colours = ["#d73027", "#fc8d59", "#fee090", "#91bfdb", "#4575b4"]
+
 IQA_colours = ["red", "blue", "orange", "green" , "cyan", "pink", "brown","yellow","magenta","black"]
 
 ##-------------------------------------------------------
@@ -63,12 +81,19 @@ def CASA2fits(CASAfile):
     os.system("rm -rf "+  CASAfile+".fits")
     exportfits(imagename=CASAfile,fitsimage=CASAfile+".fits")
 
+def CASA2fits_drop(CASAfile):
+    print(CASAfile)
+    os.system("rm -rf "+  CASAfile+".fits")
+    exportfits(imagename=CASAfile,fitsimage=CASAfile+".fits",dropdeg=True)
+
+
 ## same as fits2CASA but for a list of FITS
 def fitslist2CASA(FITSfile):
     for i in FITSfile:
         print(i)
         os.system("rm -rf "+ i+".image")
         importfits(fitsimage=i,imagename=i+'.image')
+
 
 ## Convolve CASA image with a final resolution (beam_final)
 def get_convo(convo_file,beam_final):
@@ -96,21 +121,21 @@ def getFITS_convo(FITSfile,beam_final):
         targetres=True)
 
 ## Convolve CASA image with a final resolution (beam_final)
-def get_convo2target(convo_file,ref_image):
-    # Get beam info from refence image
-    hdr = imhead(ref_image,mode='summary')
-    beam_major = hdr['restoringbeam']['major']
-    beam_minor = hdr['restoringbeam']['minor']
-    beam_PA = hdr['restoringbeam']['positionangle']
-    # Convolution into the same beam as the reference
-    os.system("rm -rf " + convo_file + '_conv' + str(round(beam_major['value'])))
-    imsmooth(imagename= convo_file,
-        outfile= convo_file + '_conv' + str(round(beam_major['value'])),
-        kernel='gauss',
-        major=beam_major,
-        minor=beam_minor,
-        pa=beam_PA,
-        targetres=True)
+#def get_convo2target(convo_file,ref_image):
+#    # Get beam info from refence image
+#    hdr = imhead(ref_image,mode='summary')
+#    beam_major = hdr['restoringbeam']['major']
+#    beam_minor = hdr['restoringbeam']['minor']
+#    beam_PA = hdr['restoringbeam']['positionangle']
+#    # Convolution into the same beam as the reference
+#    os.system("rm -rf " + convo_file + '_conv' + str(round(beam_major['value'])))
+#    imsmooth(imagename= convo_file,
+#        outfile= convo_file + '_conv' + str(round(beam_major['value'])),
+#        kernel='gauss',
+#        major=beam_major,
+#        minor=beam_minor,
+#        pa=beam_PA,
+#        targetres=True)
 
 def get_beam(image):
     # Get beam info from image: return [maj, min, pa, effbeamsize]
@@ -181,6 +206,17 @@ def resample_velaxis(image,template):
          template= template,
          axes=[2],
          output= image+'_resvel')
+
+
+## Add gaussian noise to an image
+def addnoise(image,noiselevel):
+	os.system("tm -rf " + image + "_gaussnoise")
+	os.system("cp -r " + image + " " + image + "_gaussnoise")
+	ia.open(image + "_gaussnoise") 
+	ia.addnoise(type="normal",pars=[0,noiselevel])
+	ia.close()
+	print(image + "_gaussnoise file created")
+
 
 # Mask data (typically reference image)
 def mask_image(myimage,threshold=0.0,relative=False):
@@ -272,7 +308,7 @@ def drop_axis(myimage):
     print("=================================================")
     # reference: check axis 
     os.system("rm -rf " + myimage + "_subimage")
-    imsubimage(imagename=myimage,outfile=myimage + "_subimage",dropdeg=True)
+    imsubimage(imagename=myimage,outfile=myimage + "_subimage",dropdeg=True,stretch=True)
     print(" Reference image: " + str(myimage))
     print(" New image: " + str(myimage) +"_subimage")
     print("-----------------------------------------")
@@ -333,7 +369,7 @@ def image_Fidelity(image,ref_image):
     Arguments:
       image - target image
       ref_image - reference image
-    (Note that the target image should have the same resolution as the target one)
+    (Note that the target image should have the same resolution as the reference one)
 
     Outputs:
       str(image)+'_fidelity' - Fidelity image
@@ -444,6 +480,7 @@ def get_IQA(ref_image = '',target_image=[''], pb_image=None, masking_RMS=None,
     print("---------------------------------------------")
     # Target images
     do_mask=False
+    # Mask based on PBcor + Threshold
     if(pb_image!=None and masking_RMS!=None):
         do_mask=True
         myrefbeaminfo = get_beam(ref_image)
@@ -457,20 +494,90 @@ def get_IQA(ref_image = '',target_image=[''], pb_image=None, masking_RMS=None,
 
         mybeaminfo = get_beam(target_image[target_beam_index])
         efftargetbeam = mybeaminfo[3]
+
        
         # compute masking threshold image temp.mask
         os.system("rm -rf " + target_image[target_beam_index]+'_thrsh')
         immath(imagename=[pb_image+'_convo2ref'], outfile=target_image[target_beam_index]+'_thrsh', expr='3*'+str(masking_RMS)+'*'+str(effrefbeam)+'/'+str(efftargetbeam)+'/IM0')
+        print(" Targetbeam = " +str(efftargetbeam))
+        print(" Masking_RMS (at Target res.) = " +str(masking_RMS))
+        print(" Refbeam = " +str(effrefbeam))
+        print(" Masking threshold (at Reference res.) = " +str(3.*masking_RMS*effrefbeam/efftargetbeam)+" *1/PB")
+        ia.open(target_image[target_beam_index]+'_thrsh')
+        print(target_image[target_beam_index]+'_thrsh = ', ia.shape())
+        ia.close()
         #os.system("rm -rf temp_1.mask")
-        os.system("rm -rf temp.mask")
+        os.system("rm -rf temp.mask temp.mask_subimage")
         immath(imagename=[ref_image,target_image[target_beam_index]+'_thrsh'], outfile='temp.mask', expr='iif(IM0>IM1,1,0)')
+        ia.open("temp.mask")
+        print("temp.mask = ", ia.shape())
+        ia.close()
         #immath(imagename=[ref_image,target_image[target_beam_index]+'_thrsh'], outfile='temp_1.mask', expr='iif(IM0>IM1,1,0)')
         #immath(imagename=['temp_1.mask',pb_image], outfile='temp.mask', expr='IM0[IM1>'+pbval+']')  
         # Masking also the reference
         os.system("rm -rf "+ ref_image + "_masked")
         # drop axis leads to crash!
-        #drop_axis("temp.mask")  # Regridding mask to ref_image (remove/add extra dim)
-        #immath(imagename=[ref_image,pb_image],mode='evalexpr',expr='IM0[IM1>'+pbval+']',outfile=ref_image+'_masked',mask='temp.mask')#_subimage')
+        drop_axis("temp.mask")  # Regridding mask to ref_image (remove/add extra dim)
+        ia.open("temp.mask_subimage")
+        print("temp.mask_subimage = ", ia.shape())
+        ia.close() #immath(imagename=[ref_image,pb_image],mode='evalexpr',expr='IM0[IM1>'+pbval+']',outfile=ref_image+'_masked',mask='temp.mask')#_subimage')
+        ia.open(ref_image)
+        print(ref_image, " = ", ia.shape())
+        ia.close()
+        immath(imagename=ref_image,mode='evalexpr',expr='IM0',outfile=ref_image+'_masked',mask='temp.mask')#_subimage')
+        exportfits(imagename=ref_image + "_masked",fitsimage=ref_image + "_masked.fits",dropdeg=True,overwrite=True)
+
+
+    # Mask based on Threshold (only) without PBcorr
+    if(pb_image==None and masking_RMS!=None):
+        do_mask=True
+        myrefbeaminfo = get_beam(ref_image)
+        effrefbeam = myrefbeaminfo[3]
+        #pbval = str(pbval)
+
+        # Create fake PB image and do the same as above
+        os.system("rm -rf fake_pb_image")
+        immath(imagename=target_image[0],expr='IM0*0+1.',outfile="fake_pb_image") # flat PB image = 1.
+        pb_image = "fake_pb_image"
+        #ia.open("fake_pb_image")
+        imhead(pb_image,mode='put',hdkey='bunit',hdvalue='') # remove Jy/beam units
+        #ia.close()
+        get_convo2target(pb_image,ref_image)
+        os.system("rm -rf " + pb_image + "_convo2ref")
+        os.system("mv convo2ref " + pb_image + "_convo2ref")
+
+        mybeaminfo = get_beam(target_image[target_beam_index])
+        efftargetbeam = mybeaminfo[3]
+
+       
+        # compute masking threshold image temp.mask
+        os.system("rm -rf " + target_image[target_beam_index]+'_thrsh')
+        immath(imagename=[pb_image+'_convo2ref'], outfile=target_image[target_beam_index]+'_thrsh', expr='3*'+str(masking_RMS)+'*'+str(effrefbeam)+'/'+str(efftargetbeam)+'/IM0')
+        print(" Targetbeam = " +str(efftargetbeam))
+        print(" Masking_RMS (at Target res.) = " +str(masking_RMS))
+        print(" Refbeam = " +str(effrefbeam))
+        print(" Masking threshold (at Reference res.) = " +str(3.*masking_RMS*effrefbeam/efftargetbeam))
+        ia.open(target_image[target_beam_index]+'_thrsh')
+        print(target_image[target_beam_index]+'_thrsh = ', ia.shape())
+        ia.close()
+        #os.system("rm -rf temp_1.mask")
+        os.system("rm -rf temp.mask temp.mask_subimage")
+        immath(imagename=[ref_image,target_image[target_beam_index]+'_thrsh'], outfile='temp.mask', expr='iif(IM0>IM1,1,0)')
+        ia.open("temp.mask")
+        print("temp.mask = ", ia.shape())
+        ia.close()
+        #immath(imagename=[ref_image,target_image[target_beam_index]+'_thrsh'], outfile='temp_1.mask', expr='iif(IM0>IM1,1,0)')
+        #immath(imagename=['temp_1.mask',pb_image], outfile='temp.mask', expr='IM0[IM1>'+pbval+']')  
+        # Masking also the reference
+        os.system("rm -rf "+ ref_image + "_masked")
+        # drop axis leads to crash!
+        drop_axis("temp.mask")  # Regridding mask to ref_image (remove/add extra dim)
+        ia.open("temp.mask_subimage")
+        print("temp.mask_subimage = ", ia.shape())
+        ia.close() #immath(imagename=[ref_image,pb_image],mode='evalexpr',expr='IM0[IM1>'+pbval+']',outfile=ref_image+'_masked',mask='temp.mask')#_subimage')
+        ia.open(ref_image)
+        print(ref_image, " = ", ia.shape())
+        ia.close()
         immath(imagename=ref_image,mode='evalexpr',expr='IM0',outfile=ref_image+'_masked',mask='temp.mask')#_subimage')
         exportfits(imagename=ref_image + "_masked",fitsimage=ref_image + "_masked.fits",dropdeg=True,overwrite=True)
 
@@ -483,7 +590,7 @@ def get_IQA(ref_image = '',target_image=[''], pb_image=None, masking_RMS=None,
         # Mask it
         os.system("rm -rf " + target_image[j] + "_convo2ref_masked") 
         if do_mask:
-                immath(imagename='convo2ref',mode='evalexpr',expr='IM0',outfile='convo2ref_masked',mask='temp.mask')
+                immath(imagename='convo2ref',mode='evalexpr',expr='IM0',outfile='convo2ref_masked',mask='temp.mask_subimage')
         else:
                 immath(imagename='convo2ref',mode='evalexpr',expr='IM0',outfile='convo2ref_masked',mask='mask("'+str(ref_image)+'")')
         os.system("rm -rf " + target_image[j] + "_convo2ref")
@@ -508,7 +615,7 @@ def get_IQA(ref_image = '',target_image=[''], pb_image=None, masking_RMS=None,
 # Tools for continuum and/or mom0 maps
 
 # Accuracy parameter comparisons
-def Compare_Apar(ref_image = '',target_image=[''],
+def Compare_Apar(ref_image = '',target_image=[''],adjustDR=True,
                   save=False, plotname='', 
                   labelname=[''], titlename=''):
     """
@@ -517,6 +624,7 @@ def Compare_Apar(ref_image = '',target_image=[''],
     Arguments:
       ref_image - image used as reference
       target_image - list of images to be compared with reference
+      adjustDR - adjust DR in plot
       save - save plot? (default = False)
     Requires:
       The script will look for target_image[i]_convo2ref_Apar.fits images produced by the get_IQA() script
@@ -531,9 +639,9 @@ def Compare_Apar(ref_image = '',target_image=[''],
     """
     # Reference image
     print("=============================================")
-    print(" Accuracy parameter: comparisons")
-    print(" Reference : "+str(ref_image))
-    flux0 = np.round(imstat(ref_image)["flux"][0])
+    print(" A-par: comparisons")
+    print(" Reference : "+str(ref_image+"_masked.fits"))
+    flux0 = np.round(imstat(ref_image+"_masked.fits")["flux"][0])
     print(" Total Flux = " + str(flux0) + " Jy")
     print("---------------------------------------------")
     # Number of plots
@@ -542,44 +650,56 @@ def Compare_Apar(ref_image = '',target_image=[''],
     plt.figure(figsize=(8,11))
     grid = plt.GridSpec(ncols=1,nrows=5, wspace=0.3, hspace=0.3)
     ax1 = plt.subplot(grid[0:4, 0])
+    # get y-max value
+    hmax = -10.
     # Loop over all images
     for m in np.arange(Nplots):
         # Get total flux in image
         flux = np.round(imstat(target_image[m]+"_convo2ref.fits")["flux"][0])
         # Extract values from file
-        nchans, b, mids, h = get_ALLvalues(FITSfile=target_image[m]+"_convo2ref_Apar.fits",xmin=-1.525,xmax=1.525,xstep=0.05)
+        nchans, b, mids, h = get_ALLvalues(FITSfile=target_image[m]+"_convo2ref_Apar.fits",xmin=-1.525,xmax=1.525,xstep=0.025)
+        if (np.max(h) > hmax):
+            hmax = np.max(h)
         # Get mean and std
         meanvalue = np.round(np.average(mids,weights=h),2)
-        sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=h)),2)
+        ########sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=h)),2)
+        sigmavalue = np.round(np.average((mids - meanvalue)**2, weights=h),2)
         # Get skewness and kurtosis of the Apar image
         hdu = fits.open(target_image[m]+"_convo2ref_Apar.fits")
         Adist = hdu[0].data.flatten()
         Adist = Adist[(Adist <= 10.) & (Adist >= -10.)] # remove big outlayers
         skewness = np.round(skew(Adist),3)
         kurt = np.round(kurtosis(Adist),3)
+        median = np.round(np.median(Adist),3)
+        peak = np.round(mids[np.where(h == np.nanmax(h))],3)
         # Plot results
         if labelname[m]=='':            
-            ax1.plot(mids,h,label=target_image[m] + "; A = "+ str(meanvalue) + " +/- " + str(sigmavalue),linewidth=3,c=IQA_colours[m])
+            ax1.plot(mids,h,label=target_image[m] + "; A-par = "+ str(meanvalue) + " +/- " + str(sigmavalue) + "; Flux recovered= " + str(np.round(100.*flux/flux0,1))+"%",linewidth=3,c=IQA_colours[m])
         else:
-            ax1.plot(mids,h,label=labelname[m] + "; A = "+ str(meanvalue) + " +/- " + str(sigmavalue),linewidth=3,c=IQA_colours[m])
+            ax1.plot(mids,h,label=labelname[m] + "; A-par = "+ str(meanvalue) + " +/- " + str(sigmavalue) + "; Flux recovered = " + str(np.round(100.*flux/flux0,1))+"%",linewidth=3,c=IQA_colours[m])
         # Print results on screen
         print(" Target image " + str(m+1) + " : " + str(target_image[m]))
-        print(" Total Flux = " + str(flux) + " Jy ("+str(np.round(flux/flux0,2))+"\%)")
-        print(" Accuracy:")
+        print(" Total Flux = " + str(flux) + " Jy ("+str(np.round(100.*flux/flux0,1))+"\%)")
+        print(" A-par:")
         print(" Mean +/- Std. = " + str(meanvalue) + " +/- " + str(sigmavalue))
         print(" Skewness, Kurtosis = " + str(skewness) + " , " + str(kurt) )
         print("................................................")
     # Add Goal line
-    plt.vlines(0.,np.min(h[h>0]),np.max(h),linestyle="--",color="black",linewidth=3,label="Goal",alpha=1.,zorder=-2)
+    ax1.vlines(0.,np.min(h[h>0]),hmax*1.01,linestyle="--",color="black",linewidth=2,label="Goal",alpha=1.,zorder=-2)
     # Plot limits, legend, labels...
-    plt.xlim(-1.5,1.5)
-    plt.yscale('log')   # Make y axis in log scale
+    ax1.set_xlim(-1.0,1.0)
+    #ax1.set_yscale('log')   # Make y axis in log scale
+    # adjust y-range if needed
+    yplot_min, yplot_max =  plt.gca().get_ylim()
+    if ((adjustDR == True) & (yplot_min/yplot_max <= 1E-3)):
+        ax1.set_ylim(yplot_max/1E3,yplot_max*1.01)
     #plt.legend(loc='lower right')
-    plt.legend(bbox_to_anchor=(0.5, -0.1),loc='upper center', borderaxespad=0.)
-    plt.xlabel("Accuracy",fontsize=20)
-    plt.ylabel(r'# pixels',fontsize=20)
+    ax1.legend(bbox_to_anchor=(0.5, -0.1),loc='upper center', borderaxespad=0.)
+    ax1.set_xlabel("A-par",fontsize=20)
+    ax1.set_ylabel(r'# pixels',fontsize=20)
+    ax1.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
     if titlename=='':
-        plt.title("Accuracy Parameter: comparisons",fontsize=16)
+        plt.title("A-par Parameter: comparisons",fontsize=16)
     else: 
         plt.title(titlename,fontsize=16)
 
@@ -592,11 +712,11 @@ def Compare_Apar(ref_image = '',target_image=[''],
         plt.close()
     # out
     print("---------------------------------------------")
-    print(" Accuracy parameter comparisons... DONE")
+    print(" A-par comparisons... DONE")
     print("=============================================")
     return True
 
-def Compare_Apar_signal(ref_image = '',target_image=[''],
+def Compare_Apar_signal(ref_image = '',target_image=[''],adjustDR=True,Nbins=15,
             save=False, noise=0.0, plotname='', 
             labelname=[''], titlename=''
             ):
@@ -611,6 +731,8 @@ def Compare_Apar_signal(ref_image = '',target_image=[''],
       ref_image - image used as reference
       target_image - list of images to be compared with reference 
         (recommended to <= 4 targets)
+      adjustDR - adjust dynamic range in plot (default = True)
+      Nbins - number of bins in plot (default = 15)
       save - (optional) save plot? (default = False)
       noise - (optional) if noise > 0.0 the evolution of the noise level
         will be displayed  
@@ -653,20 +775,23 @@ def Compare_Apar_signal(ref_image = '',target_image=[''],
     xmax0 = 0.0; xmin0 = 1E6    # Dummy values
     for m in np.arange(Nplots):
         # Images
-        im1 = fits.open(ref_image+".fits")
+        im1 = fits.open(ref_image+"_masked.fits")       
         im2 = fits.open(target_image[m]+"_convo2ref_Apar.fits")
+        im3 = fits.open(target_image[m]+"_convo2ref.fits")
         # Define plot limits
         ##xmin = np.min(im1[0].data[np.isnan(im1[0].data)==False])
         xmin = np.percentile(im1[0].data[np.isnan(im1[0].data)==False],0.01) #np.im replaced by 0.01 percentile to avoid outlayers
         xmax = np.max(im1[0].data[np.isnan(im1[0].data)==False])
         if (xmax > xmax0):
-            xmax0=xmax+xmax/10. # Slightly larger
+            xmax0=xmax+xmax/30. # Slightly larger
         if (xmin < xmin0):       
             xmin0=xmin
         if (xmin < 0.0):          #Lydia's modification to avoid negative values!
             xmin0=0.0001
+        if ((adjustDR == True) & (xmin/xmax < 1E-3)):
+            xmin0=xmax0/1E3	# avoid plots with dynamic range >1000
         # Plot results
-        ax0.scatter(im1[0].data,im2[0].data,c=IQA_colours[m],marker="o",rasterized=True,edgecolor='none',alpha=0.01)
+        ax0.scatter(im1[0].data.flatten(),im2[0].data.flatten(),c=IQA_colours[m],marker="o",rasterized=True,edgecolor='none',alpha=0.01)
 
     # Goal (A-par = 0)
     ax0.hlines(0.,xmin,xmax0,linestyle="--",color="black",linewidth=3,alpha=1.,zorder=2)
@@ -676,7 +801,7 @@ def Compare_Apar_signal(ref_image = '',target_image=[''],
         print("---------------------------------------------")
         print(" A-par values per bin: ")
         # Calculate bins & step in log-scale
-        steplog=(np.log10(xmax0)-np.log10(xmin0))/10.
+        steplog=(np.log10(xmax0)-np.log10(xmin0))/Nbins
         xvalueslog=np.arange(np.log10(xmin0),np.log10(xmax0),steplog)
         # back to linear scale
         step=10.**steplog
@@ -687,6 +812,7 @@ def Compare_Apar_signal(ref_image = '',target_image=[''],
         medians=np.zeros(len(xvalues))  # Median
         q1values=np.zeros(len(xvalues)) # Q1
         q3values=np.zeros(len(xvalues)) # Q2
+        fluxreco=np.zeros(len(xvalues)) # Flux recovered per bin
   
         # helpers for debugging
         #print(xmin, xmax)        
@@ -697,17 +823,24 @@ def Compare_Apar_signal(ref_image = '',target_image=[''],
         for j in xvalueslog:
             # Define bin ranges in log-space
             idx = (im1[0].data >= 10.**j) & (im1[0].data < 10.**(j+steplog)) & (np.isnan(im1[0].data)==False) & (np.isfinite(im1[0].data)==True)
-            values = im2[0].data[idx]
-            values = values[ (np.isnan(values)==False) & (np.isfinite(values)==True) ] # remove Nan & Inf.
+            # Ref + Target_convo2ref images
+            values1 = im1[0].data[idx]
+            values1 = values1[ (np.isnan(values1)==False) & (np.isfinite(values1)==True) ] # remove Nan & Inf.
+            values3 = im3[0].data[idx]
+            values3 = values3[ (np.isnan(values3)==False) & (np.isfinite(values3)==True) ] # remove Nan & Inf.
+            # Apar image
+            values2 = im2[0].data[idx]
+            values2 = values2[ (np.isnan(values2)==False) & (np.isfinite(values2)==True) ] # remove Nan & Inf.
             # Stats
-            if (np.shape(values)[0] > 0):
-                means[count] = np.mean(values)  # Mean
-                stds[count] = np.std(values)    # STD
-                medians[count] = np.median(values)  # Median
-                q1values[count] = np.percentile(values, 10) # 10% Quartile
-                q3values[count] = np.percentile(values, 90) # 90% Quartile
+            if (np.shape(values2)[0] > 0):
+                means[count] = np.mean(values2)  # Mean
+                stds[count] = np.std(values2)    # STD
+                medians[count] = np.median(values2)  # Median
+                q1values[count] = np.percentile(values2, 10) # 10% Quartile
+                q3values[count] = np.percentile(values2, 90) # 90% Quartile
+                fluxreco[count] = np.sum(values3)/np.sum(values1)
             # Show results on screen
-            print("Bin "+str(count+1)+": Ref.Flux = " + str(np.round(10.**(j+steplog/2.),2)) + " ; A = " + str(np.round(means[count],2)) + " +/- " + str(np.round(stds[count],2)) + " ; [Q10,Q90] = ["+ str(np.round(q1values[count],3)) + " , " + str(np.round(q3values[count],3)) +"]")
+            print("Bin "+str(count+1)+": Ref.Flux = " + str(np.round(10.**(j+steplog/2.),2)) + " ; A = " + str(np.round(means[count],2)) + " +/- " + str(np.round(stds[count],2)) + " ; [Q10,Q90] = ["+ str(np.round(q1values[count],3)) + " , " + str(np.round(q3values[count],3)) +"]; Flux recovered = " + str(np.round(100.*fluxreco[count],1))+"%")
             # Counter +1
             count+=1
             #
@@ -733,6 +866,7 @@ def Compare_Apar_signal(ref_image = '',target_image=[''],
         ax0.set_ylim(-1.5, 0.5)
     ax0.set_xscale('log')
     ax0.set_ylabel(r" A-par",fontsize=20)
+    ax0.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
     if titlename=='':
         plt.title("Accuracy vs. Signal",fontsize=16)
     else: 
@@ -742,27 +876,29 @@ def Compare_Apar_signal(ref_image = '',target_image=[''],
     # Plot #2: Reference vs Target
     ax1 = plt.subplot(grid[2:6, 0])
     # Loop over all images
-    xmax0 = 0.0; xmin0 = 1E6    # Dummy values
+    #xmax0 = 0.0; xmin0 = 1E6    # Dummy values
     for m in np.arange(Nplots):
         # Images
-        im1 = fits.open(ref_image+".fits")
+        im1 = fits.open(ref_image+"_masked.fits")
         im2 = fits.open(target_image[m]+"_convo2ref.fits")
         # Define plot limits
         ##xmin = np.min(im1[0].data[np.isnan(im1[0].data)==False])
         xmin = np.percentile(im1[0].data[np.isnan(im1[0].data)==False],0.01) #np.im replaced by 0.01 percentile to avoid outlayers
         xmax = np.max(im1[0].data[np.isnan(im1[0].data)==False])
-        if (xmax > xmax0):
-            xmax0=xmax+xmax/10. # Slightly larger
-        if (xmin < xmin0):
-            xmin0=xmin
-        if (xmin < 0.0):          #Lydia's modification to avoid negative values!
-            xmin0=0.0001
+        #if (xmax > xmax0):
+        #    xmax0=xmax+xmax/10. # Slightly larger
+        #if (xmin < xmin0):
+        #    xmin0=xmin
+        #if (xmin < 0.0):          #Lydia's modification to avoid negative values!
+        #    xmin0=0.0001
+        #if ((adjustDR == True) & (xmin/xmax < 1E-3)):
+        #    xmin0=xmax0/1E3	# avoid plots with dynamic range >1000
 
         # Plot results
         if labelname[m]=='':
-            ax1.scatter(im1[0].data,im2[0].data,c=IQA_colours[m],marker="o",rasterized=True,label=target_image[m],edgecolor='none',alpha=0.01)
+            ax1.scatter(im1[0].data.flatten(),im2[0].data.flatten(),c=IQA_colours[m],marker="o",rasterized=True,label=target_image[m],edgecolor='none',alpha=0.01)
         else:    
-            ax1.scatter(im1[0].data,im2[0].data,c=IQA_colours[m],marker="o",rasterized=True,label=labelname[m],edgecolor='none',alpha=0.01)
+            ax1.scatter(im1[0].data.flatten(),im2[0].data.flatten(),c=IQA_colours[m],marker="o",rasterized=True,label=labelname[m],edgecolor='none',alpha=0.01)
 
         count=0
         for j in xvalueslog:
@@ -786,32 +922,33 @@ def Compare_Apar_signal(ref_image = '',target_image=[''],
 
     # Show A values lines
     xvalues=np.arange(xmin0,xmax0,(xmax0-xmin0)/20.)
-    plt.plot(xvalues,xvalues,c="k",zorder=2,linewidth=3,linestyle="--",label="Goal (linear correlation; A-par = 0.0)")
-    plt.text((xmax0-xmin0)/3.,(xmax0-xmin0)/3.,"A=0",rotation=45,ha='center',va='center',rotation_mode="anchor",bbox=dict(boxstyle='square',facecolor='white', edgecolor='black'))
+    ax1.plot(xvalues,xvalues,c="k",zorder=2,linewidth=3,linestyle="--",label="Goal (linear correlation; A-par = 0.0)")
+    ax1.text((xmax0-xmin0)/3.,(xmax0-xmin0)/3.,"A=0",rotation=35,ha='center',va='center',rotation_mode="anchor",bbox=dict(boxstyle='square',facecolor='white', edgecolor='black'))
     # Note that the value of A=-1 needs values of Target=0, which is not allowed in ylog-plots
     for k in np.array([-0.75,-0.5,-0.25,0.25,0.5,0.75,1.0]):
         def Avalues(A,x):
             return A*x+x
         yvalues=Avalues(A=k,x=xvalues)
         ax1.plot(xvalues,yvalues,c="grey",zorder=2,linestyle="dashed",alpha=0.5)
-        ax1.text((xmax0-xmin0)/3.,Avalues(A=k,x=(xmax0-xmin0)/3.),"A="+str(k),rotation=45,ha='center',va='center',rotation_mode="anchor",clip_on=True,size=10.,color="grey",zorder=2)
+        ax1.text((xmax0-xmin0)/3.,Avalues(A=k,x=(xmax0-xmin0)/3.),"A="+str(k),rotation=35,ha='center',va='center',rotation_mode="anchor",clip_on=True,size=10.,color="grey",zorder=2)
 
     # Show noise effects?
     if (noise > 0):
         xvalues=np.arange(np.log10(xmin0),np.log10(xmax0),(np.log10(xmax0)-np.log10(xmin0))/20.)
         xvalues=10.**xvalues
-        plt.plot(xvalues,xvalues-noise,c="blue",zorder=2,linewidth=4,linestyle="dotted",label=r"White noise:  $\sigma = $"+str(np.round(noise,2))+" (image units)")
-        plt.plot(xvalues,xvalues+noise,c="blue",zorder=2,linewidth=4,linestyle="dotted")
+        ax1.plot(xvalues,xvalues-noise,c="blue",zorder=2,linewidth=4,linestyle="dotted",label=r"White noise:  $\sigma = $"+str(np.round(noise,2))+" (image units)")
+        ax1.plot(xvalues,xvalues+noise,c="blue",zorder=2,linewidth=4,linestyle="dotted")
 
     # Plot limits, legend, labels...
-    plt.xlim(xmin0,xmax0)
-    plt.ylim(xmin0,xmax0)
-    plt.xscale('log')
-    plt.yscale('log')
+    ax1.set_xlim(xmin0,xmax0)
+    ax1.set_ylim(xmin0,xmax0)
+    ax1.set_xscale('log')
+    ax1.set_yscale('log')
+    ax1.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
     # Legend and labels
-    plt.legend(bbox_to_anchor=(0.5, -0.15),loc='upper center', borderaxespad=0.)
-    plt.ylabel(r" Target flux (image units)",fontsize=20)
-    plt.xlabel(r" Reference flux (image units)",fontsize=20)
+    ax1.legend(bbox_to_anchor=(0.5, -0.15),loc='upper center', borderaxespad=0.)
+    ax1.set_ylabel(r" Target flux (image units)",fontsize=20)
+    ax1.set_xlabel(r" Reference flux (image units)",fontsize=20)
 
 
     # Save plot?
@@ -826,6 +963,232 @@ def Compare_Apar_signal(ref_image = '',target_image=[''],
     print(" A-par vs Signal... DONE")
     print("=============================================")
     return True
+
+
+
+def Compare_Flux_signal(ref_image = '',target_image=[''],adjustDR=True, Nbins=15.,
+            save=False, noise=0.0, plotname='', 
+            labelname=[''], titlename=''
+            ):
+    """
+    Compare_Flux_signal (A. Hacar, Univ. of Vienna) 
+    
+    Compare Flux recovery in images vs signal (continuum or mom0 maps).
+    This function can be applied in both cont/mom0 and cubes FITS files.
+    
+    Arguments:
+      ref_image - image used as reference
+      target_image - list of images to be compared with reference 
+        (recommended to <= 4 targets)
+      adjustDR - adjust dynamic range in plot (default = True)
+      Nbins = Number of bins in plot (default = 15)
+      save - (optional) save plot? (default = False)
+      noise - (optional) if noise > 0.0 the evolution of the noise level
+        will be displayed  
+    
+    Requires:
+      The script will look for target_image[i]_convo2ref_Apar.fits images produced by the get_IQA() script
+    
+    Results:
+      Flux recovery as function of reference signals both in absolute and relative terms
+    
+    Example 1: compare a list of targets
+      Compare_Flux_signal(ref_image = 'TP_image',target_image=['Feather.image','TP2vis.image'])
+    
+    Example 2: investigate single target
+      Compare_Flux_signal(ref_image = 'TP_image',target_image=['Feather.image'])
+    
+    """
+    # Reference image
+    print("=============================================")
+    print(" Flux recovered vs Signal")
+    print("---------------------------------------------")
+    # Number of plots
+    Nplots = np.shape(target_image)[0]
+
+    # Figure parameters 
+    plt.figure(figsize=(8,15))
+    grid = plt.GridSpec(ncols=1,nrows=8, wspace=0.3, hspace=0.3)
+    
+    # Plot #1: Reference vs A-par
+    ax1 = plt.subplot(grid[0:3, 0])
+    ax1.set_xscale('log')
+    ax1.set_ylabel(r"Flux recovered"+"\n"+"per bin (%)",fontsize=16)
+    if titlename=='':
+        ax1.set_title("Flux per signal bin",fontsize=20)
+    else: 
+        ax1.set_title(titlename,fontsize=16)
+
+    # Plot #2: Reference vs Target
+    ax2 = plt.subplot(grid[3:7, 0])
+    # Plot limits, legend, labels...
+    ax2.set_xscale('log')
+    # Legend and labels
+    ax2.set_ylabel(r" Cumulative flux recovered (%)",fontsize=16)
+    ax2.set_xlabel(r" Reference flux (image units)",fontsize=20)
+
+
+    # Loop over all images
+    xmax0 = 0.0; xmin0 = 1E6    # Dummy values
+
+    for m in np.arange(Nplots):
+        # Images
+        im1 = fits.open(ref_image+"_masked.fits")       
+        im2 = fits.open(target_image[m]+"_convo2ref_Apar.fits")
+        im3 = fits.open(target_image[m]+"_convo2ref.fits")
+        # Define plot limits
+        ##xmin = np.min(im1[0].data[np.isnan(im1[0].data)==False])
+        xmin = np.percentile(im1[0].data[np.isnan(im1[0].data)==False],0.01) #np.im replaced by 0.01 percentile to avoid outlayers
+        xmax = np.max(im1[0].data[np.isnan(im1[0].data)==False])
+        if (xmax > xmax0):
+            xmax0=xmax+xmax/10. # Slightly larger
+        if (xmin < xmin0):       
+            xmin0=xmin
+        if (xmin < 0.0):          #Lydia's modification to avoid negative values!
+            xmin0=0.0001
+        if ((adjustDR == True) & (xmin/xmax < 1E-3)):
+            xmin0=xmax0/1E3	# avoid plots with dynamic range >1000
+        
+    # Calculate flux values
+        # Calculate bins & step in log-scale
+        steplog=(np.log10(xmax0)-np.log10(xmin0))/Nbins
+        xvalueslog=np.arange(np.log10(xmin0),np.log10(xmax0),steplog)
+        # back to linear scale
+        step=10.**steplog
+        xvalues=10.**xvalueslog
+        # Define stats vectors
+        means=np.zeros(len(xvalues))    # Mean
+        stds=np.zeros(len(xvalues)) # STD
+        medians=np.zeros(len(xvalues))  # Median
+        q1values=np.zeros(len(xvalues)) # Q1
+        q3values=np.zeros(len(xvalues)) # Q2
+        fluxref=np.zeros(len(xvalues)) # Flux recovered per bin
+        fluxref_cumulative=np.zeros(len(xvalues)) #
+        fluxreco=np.zeros(len(xvalues)) # Flux recovered per bin
+        fluxreco_cumulative=np.zeros(len(xvalues)) #
+        # helpers for debugging
+        #print(xmin, xmax)        
+        #print(xmin0, xmax0)
+        #print(xvalues)
+
+        count=0
+        for j in xvalueslog:
+            # Define bin ranges in log-space
+            idx = (im1[0].data >= 10.**j) & (im1[0].data < 10.**(j+steplog)) & (np.isnan(im1[0].data)==False) & (np.isfinite(im1[0].data)==True)
+            # Ref + Target_convo2ref images
+            values1 = im1[0].data[idx]
+            values1 = values1[ (np.isnan(values1)==False) & (np.isfinite(values1)==True) ] # remove Nan & Inf.
+            values3 = im3[0].data[idx]
+            values3 = values3[ (np.isnan(values3)==False) & (np.isfinite(values3)==True) ] # remove Nan & Inf.
+            # Apar image
+            values2 = im2[0].data[idx]
+            values2 = values2[ (np.isnan(values2)==False) & (np.isfinite(values2)==True) ] # remove Nan & Inf.
+            # Stats
+            if (np.shape(values2)[0] > 0):
+                means[count] = np.mean(values2)  # Mean
+                stds[count] = np.std(values2)    # STD
+                medians[count] = np.median(values2)  # Median
+                q1values[count] = np.percentile(values2, 10) # 10% Quartile
+                q3values[count] = np.percentile(values2, 90) # 90% Quartile
+                fluxref[count] = np.nansum(values1)
+                fluxreco[count] = np.nansum(values3)
+                if (count == 0):
+                     fluxref_cumulative[0] = fluxref[count]
+                     fluxreco_cumulative[0] = fluxreco[count]
+                else:
+                     fluxref_cumulative[count] = np.nansum(fluxref[0:count+1])
+                     fluxreco_cumulative[count] = np.nansum(fluxreco[0:count+1])
+
+                if(fluxref[count]==0):
+                     fluxref[count] = 1E-10	#avoid 0/0
+                if(fluxreco[count]==np.nan):
+                     fluxreco[count] = 0.0
+                print(" bin " + str(count) + " " + str(fluxref[count]) + "  " + str(fluxreco[count]) + "  " + str(fluxreco[count]/fluxref[count]))
+            else:
+                fluxref[count] = 1E-10 #avoid 0/0
+                fluxreco[count] = 0.0  #avoid 0/0
+                if (count == 0):
+                     fluxref_cumulative[0] = fluxref[count]
+                     fluxreco_cumulative[0] = fluxreco[count]
+                else:
+                     fluxref_cumulative[count] = np.nansum(fluxref[0:count+1])
+                     fluxreco_cumulative[count] = np.nansum(fluxreco[0:count+1])
+            # Counter +1
+            count+=1
+            #
+        # Show results on screen
+        for k in np.arange(count): 
+            print("Bin "+str(k+1)+": Ref.Flux = " + str(np.round(10.**(xvalueslog[k]+steplog/2.),2)) + " ; Flux in ref = " + str(np.round(fluxref[k],1)) + " (image units);" + " ; Flux in ref (per bin) = " + str(np.round(100.*fluxref[k]/np.nansum(fluxref),1)) + " (image units);" + " Flux recovered (per bin) = " + str(np.round(100.*fluxreco[k]/fluxref[k],1))+"%; Flux recovered (cumulative)= " + str(np.round(100.*fluxreco_cumulative[k]/np.nansum(fluxref),1))+"%")
+        # Flux recovered
+        ax1.scatter(10.**(xvalueslog+steplog/2.),100.*fluxreco/fluxref,c=IQA_colours[m],)
+        ax1.plot(10.**(xvalueslog+steplog/2.),100.*fluxreco/fluxref,c=IQA_colours[m],lw=2)
+        # Flux recovere (cumulative) plot
+        if labelname[m]=='':
+            ax2.scatter(10.**(xvalueslog+steplog/2.),100.*fluxreco_cumulative/np.nansum(fluxref),c=IQA_colours[m],label=target_image[m])
+        else:
+            ax2.scatter(10.**(xvalueslog+steplog/2.),100.*fluxreco_cumulative/np.nansum(fluxref),c=IQA_colours[m],label=labelname[m])
+        ax2.plot(10.**(xvalueslog+steplog/2.),100.*fluxreco_cumulative/np.nansum(fluxref),c=IQA_colours[m],lw=2)
+
+
+    # Add reference flux
+    ax2.scatter(10.**(xvalueslog+steplog/2.),100.*fluxref_cumulative/np.sum(fluxref),c="w",zorder=-3,s=60.,marker="^",edgecolor="grey",label="Reference")
+
+
+    # Set plot limits
+    ax1.axhline(100.,xmin=1E-6,xmax=xmax0,linestyle="dashed",c="k",lw=2)
+    ax1.axhline(90.,xmin=1E-6,xmax=xmax0,linestyle="dashed",c="grey")
+    ax1.axhline(110.,xmin=1E-6,xmax=xmax0,linestyle="dashed",c="grey")
+    ax1.set_xlim(xmin0,xmax0)
+    ax1.set_ylim(-10.,119.)
+    ax1.yaxis.set_minor_locator(plt.MultipleLocator(10.))
+    ax1.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
+    ax2.axhline(100,xmin=1E-6,xmax=xmax0,linestyle="dashed",c="k",lw=2)
+    ax2.axhline(90,xmin=1E-6,xmax=xmax0,linestyle="dashed",c="grey")
+    ax2.axhline(50,xmin=1E-6,xmax=xmax0,linestyle="dotted",c="grey")
+    ax2.yaxis.set_minor_locator(plt.MultipleLocator(5.))
+    ax2.set_yticks([0.,25,50,75,100])
+    ax2.set_xlim(xmin0,xmax0)
+    ax2.set_ylim(-10.,109)
+    ax2.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
+    ax2.legend(bbox_to_anchor=(0.5, -0.15),loc='upper center', borderaxespad=0.)
+
+    # Add total flux (in percentage)
+    ax3 = ax1.twinx()
+    ax3.scatter(10.**(xvalueslog+steplog/2.),100.*fluxref/np.nansum(fluxref),c="w",zorder=-4,s=60.,marker="^",label="Flux percentage",edgecolor="grey")
+    ax3.plot(10.**(xvalueslog+steplog/2.),100.*fluxref/np.nansum(fluxref),c="grey",zorder=-5,lw=3,linestyle="dashed")
+    ax3.set_xlim(xmin0,xmax0)
+    ax3.set_ylim(-5.,60.)
+    ax3.set_yticks([0.,10,20,30,40,50])
+    ax3.tick_params(axis='y', colors='grey')
+    ax3.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
+    ax3.yaxis.set_minor_locator(plt.MultipleLocator(5.))
+    ax3.set_ylabel("Flux per bin in Reference (%)",color="grey",fontsize=16)
+
+    # Add total flux (in percentage)
+    ax4 = ax2.twinx()
+    ax4.scatter(10.**(xvalueslog+steplog/2.),100.*fluxref_cumulative/np.nansum(fluxref),c="w",zorder=-3,s=60.,marker="^",edgecolor="grey",label="Reference")
+    ax4.plot(10.**(xvalueslog+steplog/2.),100.*fluxref_cumulative/np.nansum(fluxref),c="grey",lw=3,zorder=-5,linestyle="dashed")
+    ax4.set_xlim(xmin0,xmax0)
+    ax4.set_ylim(-10.,109.)
+    ax4.set_yticks([0.,25,50,75,100])
+    ax4.tick_params(axis='y', colors='grey')
+    ax4.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
+    ax4.yaxis.set_minor_locator(plt.MultipleLocator(5.))
+    ax4.set_ylabel("Cumulative Flux in Reference (%)",color="grey",fontsize=16)
+
+    # Save plot?
+    if save == True:
+        if plotname == '':
+            plotname="Apar_signal_ALL_tmp"
+        plt.savefig(plotname+'.png')
+        print(" See results: "+plotname+".png")
+        plt.close()
+    # out
+    print("---------------------------------------------")
+    print(" Flux recovered vs Signal... DONE")
+    print("=============================================")
+    return True
+
 
 # Fidelity comparisons
 def Compare_Fidelity(ref_image = '',target_image=[''],
@@ -873,26 +1236,27 @@ def Compare_Fidelity(ref_image = '',target_image=[''],
         q3value = np.round(np.percentile(Fdist, 75),1)  # Quartile 3rd
         #meanvalue = np.round(np.average(mids,weights=h),1)
         if labelname[m]=='':
-            plt.plot(mids,h,label=target_image[m] + "; <Fidelity> = "+ str(meanvalue),linewidth=3,c=IQA_colours[m])
+            ax1.plot(mids,h,label=target_image[m] + "; <Fidelity> = "+ str(meanvalue),linewidth=3,c=IQA_colours[m])
         else:    
-            plt.plot(mids,h,label=labelname[m] + "; <Fidelity> = "+ str(meanvalue),linewidth=3,c=IQA_colours[m])
+            ax1.plot(mids,h,label=labelname[m] + "; <Fidelity> = "+ str(meanvalue),linewidth=3,c=IQA_colours[m])
         # Display on screen
         print(" Fidelity")
         print("  Mean = " + str(meanvalue))
         print("  [Q1,Median,Q3] = ["+str(q1value)+" , "+ str(medianvalue)+" , "+str(q3value)+"]")
     # plot lims, axis, labels, etc...
-    plt.xlim(1,100.)
-    plt.xscale('log')
-    plt.yscale('log')   # Make y axis in log scale
+    ax1.set_xlim(0.5,100.)
+    ax1.set_xscale('log')
+    ax1.set_yscale('log')   # Make y axis in log scale
     #plt.ylim(1,)
     #plt.legend(loc="lower left")
-    plt.legend(bbox_to_anchor=(0.5, -0.1),loc='upper center', borderaxespad=0.)
-    plt.xlabel("Fidelity",fontsize=20)
-    plt.ylabel(r'# pixels',fontsize=20)
+    ax1.legend(bbox_to_anchor=(0.5, -0.1),loc='upper center', borderaxespad=0.)
+    ax1.set_xlabel("Fidelity",fontsize=20)
+    ax1.set_ylabel(r'# pixels',fontsize=20)
+    ax1.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
     if titlename=='':
-        plt.title("Fidelity Comparisons",fontsize=16)
+        ax1.set_title("Fidelity Comparisons",fontsize=16)
     else:
-        plt.title(titlename,fontsize=16)
+        ax1.set_title(titlename,fontsize=16)
     if save == True:
         if plotname == '':
             plotname="FidelityALL_tmp"
@@ -956,33 +1320,34 @@ def Compare_Fidelity_signal(ref_image = '',target_image=[''],
         else:    
             ax1.scatter(im1[0].data,im2[0].data,c=IQA_colours[m],marker="o",rasterized=True,label=labelname[m],edgecolor='none')
     # Plot limits, legend, labels...
-    plt.xlim(xmin0,xmax0+xmax0/5)
-    plt.ylim(xmin0,xmax0+xmax0/5)
-    plt.xscale('log')
-    plt.yscale('log')   
+    ax1.set_xlim(xmin0,xmax0+xmax0/5)
+    ax1.set_ylim(xmin0,xmax0+xmax0/5)
+    ax1.set_xscale('log')
+    ax1.set_yscale('log')   
     # Get A values lines
     xvalues=np.arange(xmin0,xmax0,(xmax0-xmin0)/20.)
-    plt.plot(xvalues,xvalues,linestyle="dashed",c="k",label="Goal (linear correlation)",zorder=2,linewidth=3)
+    ax1.plot(xvalues,xvalues,linestyle="dashed",c="k",label="Goal (linear correlation)",zorder=2,linewidth=3)
     # Fidelities
     for k in np.array([2.,5.,10.]):
         def Fvalues(F,x):
             return F*x/(F+1.)
         yvalues=Fvalues(F=k,x=xvalues)
-        plt.plot(xvalues,yvalues,c="grey",zorder=2,linestyle="dashed")
-        plt.text((xmax0-xmin0)/2.,Fvalues(F=k,x=(xmax0-xmin0)/2.),"Fid.="+str(k),rotation=45,ha='center',va='center',rotation_mode="anchor",bbox=dict(boxstyle='square',facecolor='white', edgecolor='black'))
+        ax1.plot(xvalues,yvalues,c="grey",zorder=2,linestyle="dashed")
+        ax1.text((xmax0-xmin0)/2.,Fvalues(F=k,x=(xmax0-xmin0)/2.),"Fid.="+str(k),rotation=45,ha='center',va='center',rotation_mode="anchor",bbox=dict(boxstyle='square',facecolor='white', edgecolor='black'))
         def Fvalues(F,x):
             return F*x/(F-1.)
         yvalues=Fvalues(F=k,x=xvalues)
-        plt.plot(xvalues,yvalues,c="grey",zorder=2,linestyle="dashed")
-        plt.text((xmax0-xmin0)/2.,Fvalues(F=k,x=(xmax0-xmin0)/2.),"Fid.="+str(k),rotation=45,ha='center',va='center',rotation_mode="anchor",bbox=dict(boxstyle='square',facecolor='white', edgecolor='black'))
+        ax1.plot(xvalues,yvalues,c="grey",zorder=2,linestyle="dashed")
+        ax1.text((xmax0-xmin0)/2.,Fvalues(F=k,x=(xmax0-xmin0)/2.),"Fid.="+str(k),rotation=45,ha='center',va='center',rotation_mode="anchor",bbox=dict(boxstyle='square',facecolor='white', edgecolor='black'))
     #plt.legend(loc='lower right')
-    plt.legend(bbox_to_anchor=(0.5, -0.1),loc='upper center', borderaxespad=0.)
-    plt.ylabel(r" Target flux (image units)",fontsize=20)
-    plt.xlabel(r'# Reference flux (image units)',fontsize=20)
+    ax1.legend(bbox_to_anchor=(0.5, -0.1),loc='upper center', borderaxespad=0.)
+    ax1.set_ylabel(r" Target flux (image units)",fontsize=20)
+    ax1.set_xlabel(r'# Reference flux (image units)',fontsize=20)
+    ax1.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
     if titlename=='':
-        plt.title("Fidelity vs. Signal",fontsize=16)
+        ax1.set_title("Fidelity vs. Signal",fontsize=16)
     else: 
-        plt.title(titlename,fontsize=16)
+        ax1.set_title(titlename,fontsize=16)
     
     # Save plot?
     if save == True:
@@ -1002,8 +1367,8 @@ def Compare_Fidelity_signal(ref_image = '',target_image=[''],
 
 #  Compare Accuracy parameter (cubes) 
 def Compare_Apar_cubes(ref_image = '',target_image=[''],save=False, plotname='', 
-             labelname=[''], titlename=''
-             ):
+             labelname=[''], titlename='',
+             showchannels=[0,0]):
     """
     Compare all Apar cubes (per channel) (A. Hacar, Univ. of Vienna)
 
@@ -1011,6 +1376,7 @@ def Compare_Apar_cubes(ref_image = '',target_image=[''],save=False, plotname='',
       ref_image - image used as reference
       target_image - list of images to be compared with reference
       save - save plot? (default = False)
+      showchannels - which channels to show, default [0,0] = ALL
     Requires:
       The script will look for target_image[i]_convo2ref_Apar.fits cubes produced by the get_IQA() script
     
@@ -1033,7 +1399,7 @@ def Compare_Apar_cubes(ref_image = '',target_image=[''],save=False, plotname='',
     plt.show()
 
     ysizeplots = 4.
-    fig = plt.figure(figsize=(15,Nplots*ysizeplots))
+    fig = plt.figure(figsize=(13,Nplots*ysizeplots))
     if titlename=='':
         fig.suptitle("Apar vs. channels",fontsize=16)
     else: 
@@ -1042,7 +1408,10 @@ def Compare_Apar_cubes(ref_image = '',target_image=[''],save=False, plotname='',
     # Create plots per channel
     for j in np.arange(0,Nplots,1):
         #xvalues, yvalues = plot_Apar(image2plot=target_image[j]+"_convo2ref_Apar.fits",Nplots=Nplots,Ny=j,title=str(target_image[j]))
-        xvalues, yvalues = plot_Apar(image2plot=target_image[j]+"_convo2ref_Apar.fits",Nplots=Nplots,Ny=j,title=str(labelname[j]))
+        plotxlabel = False
+        if (j == (Nplots-1)):
+            plotxlabel = True
+        xvalues, yvalues = plot_Apar(image2plot=target_image[j]+"_convo2ref_Apar.fits",Nplots=Nplots,Ny=j,title=str(labelname[j]),plotxlabel=plotxlabel,showchannels=showchannels)
         # Store results for comparison
         if (j == 0):
             results = yvalues
@@ -1065,28 +1434,48 @@ def Compare_Apar_cubes(ref_image = '',target_image=[''],save=False, plotname='',
     plt.figure(figsize=(8,11))
     grid = plt.GridSpec(ncols=1,nrows=5, wspace=0.3, hspace=0.3)
     ax1 = plt.subplot(grid[0:4, 0])
+
+    # Reference image
+    image = fits.open(ref_image+"_masked.fits")
+    flux0 = np.round(imstat(ref_image+"_masked.fits")["flux"][0])
     # Loop over images
+    results = 0.0
     for m in np.arange(Nplots):
+        # Target image
+        image = fits.open(target_image[m]+"_convo2ref.fits")
+        flux1 = np.round(imstat(target_image[m]+"_convo2ref.fits")["flux"][0])
         # Get values
         nchans, b, mids, h = get_ALLvalues(FITSfile=target_image[m]+"_convo2ref_Apar.fits",xmin=-1.525,xmax=1.525,xstep=0.05)
-        plt.plot(mids,h,label=str(labelname[m]),linewidth=3,c=IQA_colours[m])
         #plt.plot(mids,h,label=str(target_image[m]),linewidth=3,c=IQA_colours[m])
         # Get mean + std
         meanvalue = np.round(np.average(mids,weights=h),2)
-        sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=h)),2)
+        ###sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=h)),2)
+        sigmavalue = np.round(np.average((mids - meanvalue)**2, weights=h),2)
         # Print on screen
         print(" Target image " + str(m+1) + " : " + str(target_image[m]))
         print(" A-parameter = " + str(meanvalue) + " +/- " + str(sigmavalue))
+        print(" Flux in image = " + str(flux1))
+        print(" Flux in reference = " + str(flux0))
+        print(" Flux recovered = " + str(np.round(100.*flux1/flux0,2))+" %")
+	# Plot values
+        if labelname[m]=='':            
+            ax1.plot(mids,h,label=target_image[m] + "; A-par = "+ str(meanvalue) + " +/- " + str(sigmavalue) + "; Flux recovered= " + str(np.round(100.*flux1/flux0,1))+"%",linewidth=3,c=IQA_colours[m])
+        else:
+            ax1.plot(mids,h,label=labelname[m] + "; A-par = "+ str(meanvalue) + " +/- " + str(sigmavalue) + "; Flux recovered = " + str(np.round(100.*flux1/flux0,1))+"%",linewidth=3,c=IQA_colours[m])
+	#
+        if (results <= np.max(h)):
+             results = np.max(h)
     # Display goal
-    plt.axvline(0.,0.,np.max(results),linestyle="--",color="black",linewidth=3,label="Goal",alpha=1.,zorder=-2)
+    plt.vlines(0.,0.,np.max(results),linestyle="--",color="black",linewidth=3,label="Goal",alpha=1.,zorder=-2)
     # Plot limits, legend, labels...
     plt.xlim(-1.0,1.0)
-    plt.yscale('log')   # Make y axis in log scale
+    #plt.yscale('log')   # Make y axis in log scale
     plt.ylim(1,)
     #plt.legend()
     plt.legend(bbox_to_anchor=(0.5, -0.1),loc='upper center', borderaxespad=0.)
-    plt.xlabel("Accuracy",fontsize=25)
+    plt.xlabel("A-par",fontsize=25)
     plt.ylabel(r'# pixels',fontsize=20)
+    ax1.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
 
     if titlename=='':
         plt.title("ALL Apar vs. channels",fontsize=16)
@@ -1098,7 +1487,7 @@ def Compare_Apar_cubes(ref_image = '',target_image=[''],save=False, plotname='',
         if plotname == '':
             plotnameALL="AparALL_channels_tmp"
         else:
-            plotnameALL=plotname+'_ALL'
+            plotnameALL=plotname+'_Apar_Comparison'
         plt.savefig(plotnameALL+'.png')
         print(" See results: "+plotnameALL+".png")
         plt.close()
@@ -1244,7 +1633,7 @@ def get_CHANvalues(FITSfile,xmin,xmax,xstep,channel):
     return 0. , bins_histo, bins_mids, hist.T
 
 # get values from FITS (per channel)
-def get_values(FITSfile,xmin,xmax,xstep):
+def get_values(FITSfile,xmin,xmax,xstep,inlog=False):
     # FITS file
     image = fits.open(FITSfile)
     # Histogram per channel
@@ -1256,21 +1645,27 @@ def get_values(FITSfile,xmin,xmax,xstep):
         idxs = np.isfinite(subimage)
         hist, bin_edges = np.histogram(subimage[idxs],bins=bins_histo)
         # values in log scale
-        values_log = np.log10(hist.T)
-        if (i == 0):
-            Histogram = copy.deepcopy(values_log)   
+        if (inlog == True):
+            values_log = np.log10(hist.T)
+            if (i == 0):
+                Histogram = copy.deepcopy(values_log)   
+            else:
+                Histogram = np.column_stack((Histogram,values_log))
         else:
-            Histogram = np.column_stack((Histogram,values_log))
+            if (i == 0):
+                Histogram = copy.deepcopy(hist.T)   
+            else:
+                Histogram = np.column_stack((Histogram,hist.T))
     return nchan, bins_histo, bins_mids, Histogram
 
 
 
 
-def plot_Apar(image2plot,Nplots,Ny,title):
+def plot_Apar(image2plot,Nplots,Ny,title,plotxlabel,showchannels=[0,0]):
     grid = plt.GridSpec(ncols=3,nrows=Nplots, wspace=0.1, hspace=0.2)
     # A-par plot
     xminplot = -1.5; xmaxplot = 1.5
-    nchans, b, mids, h = get_values(FITSfile=image2plot,xmin=xminplot,xmax=xmaxplot,xstep=0.1)
+    nchans, b, mids, h = get_values(FITSfile=image2plot,xmin=xminplot,xmax=xmaxplot,xstep=0.1,inlog=True) # h is in log10
     h[h == -inf] = np.nan
     # 2D plot per channel
     ax1 = plt.subplot(grid[Ny, :2])
@@ -1278,40 +1673,58 @@ def plot_Apar(image2plot,Nplots,Ny,title):
     plt.title(title,fontsize=20,x=0,ha="left",position=(0.1,0.7))
     #plt.title("Q parameter",fontsize=10,x=1,ha="right",color='grey', style='italic')
     plt.imshow(h, extent =(-0.5,nchans-0.5,xminplot,xmaxplot), aspect='auto',vmin=0,cmap="jet", interpolation='none',origin='lower')
-    plt.hlines(0,-0.5,nchans-0.5,linestyle="--",color="black",linewidth=3,label="Goal") 
-    plt.xlabel("Channel number",fontsize=15)
-    #plt.ylabel("Accuracy (per channel)",fontsize=18)
-    plt.ylabel("Accuracy (per channel)",fontsize=15)
-    h[np.isnan(h)] = 0.0
+    plt.hlines(0,-0.5,nchans-0.5,linestyle="--",color="black",linewidth=3,label="Goal")
+    if (plotxlabel == True):
+        plt.xlabel("Channel number",fontsize=15)
+    if (showchannels != [0,0]):
+        plt.xlim(showchannels)
+    #plt.ylabel("A-par (per channel)",fontsize=18)
+    plt.ylabel("A-par (per channel)",fontsize=12)
+    ax1.tick_params(direction='in',bottom=True, top=True, left=True, right=True)
+    #h[np.isnan(h)] = 0.0
     cbar = plt.colorbar()
     cbar.set_label(r'log$_{10}(\# pixels)$',fontsize=15)
+
     # Histogram
     ax2 = plt.subplot(grid[Ny, 2])
-    plt.hlines(0,0.1,max(h.flat),linestyle="--",color="black",linewidth=3,label="Goal",alpha=1.,zorder=-2)
     # Get mean values (only orientative)
+    nchans, b, mids, h = get_values(FITSfile=image2plot,xmin=xminplot,xmax=xmaxplot,xstep=0.1,inlog=False) # h is in lin-space
     for i in np.arange(0,nchans):
         plt.step(h[:,i],mids,color="grey",linewidth=1, alpha=0.1)
-    ##h[h == 0.0] = np.nan
+    h = h.astype(np.float) # convert to float
+    h[h==np.nan] = 0
+    h[h == 0] = np.nan
     # We use linear weights rather than log10
-    plt.step(np.log10(np.average(10.**h,axis=1)),mids,color="red",linewidth=3,label="mean")
-    meanvalue = np.round(np.average(mids,weights=np.log10(np.average(10.**h,axis=1))),2)
-    sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=np.log10(np.average(10.**h,axis=1)))),2)
+    #plt.step(np.log10(np.average(10.**h,axis=1)),mids,color="red",linewidth=3,label="mean")
+    #meanvalue = np.round(np.average(mids,weights=np.log10(np.average(10.**h,axis=1))),2)
+    plt.step(np.nanmean(h,axis=1),mids,color="red",linewidth=3,label="average A-par per channel")
+    mean_perchannel = np.nanmean(h,axis=1)
+    idx = np.isfinite(mean_perchannel)
+    meanvalue = np.round(np.average(mids[idx],weights=mean_perchannel[idx]),2)
+    ##sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=np.log10(np.average(10.**h,axis=1)))),2)
+    #sigmavalue = np.round(np.average((mids - meanvalue)**2, weights=np.log10(np.average(10.**h,axis=1))),2)
+    sigmavalue = np.round(np.average((mids[idx] - meanvalue)**2, weights=mean_perchannel[idx]),2)
     # The alternative would be
     #plt.step(np.nanmean(h,axis=1)[:],mids,color="red",linewidth=3,label="mean")
     #meanvalue = np.round(np.average(mids,weights=np.nanmean(h,axis=1)[:]),2)
     #sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=np.nanmean(h,axis=1)[:])),2)
-    plt.title('{:.2f}'.format(meanvalue)+"+/-"+'{:.2f}'.format(sigmavalue),fontsize=15,x=0,ha="left",position=(0.6,0.1),color="blue")
-    plt.hlines(meanvalue,0.1,max(h.flat),color="blue",linewidth=3,label="average",alpha=0.5,zorder=-2)
+    plt.title('{:.2f}'.format(meanvalue)+"+/-"+'{:.2f}'.format(sigmavalue),fontsize=15,x=0,ha="left",position=(0.5,0.1),color="blue")
+    plt.hlines(meanvalue,0.1,np.nanmax(h.flat),color="blue",linewidth=3,label="mean A-par",alpha=0.5,zorder=-2)
+    plt.hlines(0,0.1,np.nanmax(h.flat),linestyle="--",color="black",linewidth=3,label="Goal",alpha=1.,zorder=-2)
     # Plot parameters
-    plt.xlim(0,max(h.flat))
-    plt.ylabel("Accuracy (per channel)",fontsize=15)
-    #plt.ylabel("Accuracy (per channel)",fontsize=18)
-    plt.xlabel(r'log$_{10}(\# pixels)$',fontsize=15)
+    plt.xlim(0,(np.nanmax(h.flat)))
+    plt.ylim(-1.5,1.5)
+    plt.ylabel("A-par (per channel)",fontsize=12)
+    #plt.ylabel("A-par (per channel)",fontsize=18)
+    if (plotxlabel == True):
+        plt.xlabel(r'# pixels',fontsize=15)
     plt.legend(loc="upper left",prop={"size":10})
-    ax2.tick_params(labelbottom=True, labelleft=False, labelright=True,bottom=True, top=True, left=True, right=True)
+    ax2.tick_params(direction='in',labelbottom=True, labelleft=False, labelright=True,bottom=True, top=True, left=True, right=True)
     ax2.yaxis.set_label_position("right")
     # return for comparisons
     return mids, np.nanmean(h,axis=1)[:]
+
+
 
 def plot_Fidelity(image2plot,Nplots,Ny,title):
     grid = plt.GridSpec(ncols=3,nrows=Nplots, wspace=0.1, hspace=0.2)
@@ -1342,7 +1755,8 @@ def plot_Fidelity(image2plot,Nplots,Ny,title):
     # We use linear weights rather than log10
     plt.step(np.log10(np.average(10.**h,axis=1)),mids,color="red",linewidth=3,label="mean")
     meanvalue = np.round(np.average(mids,weights=np.log10(np.average(10.**h,axis=1))),2)
-    sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=np.log10(np.average(10.**h,axis=1)))),2)
+    ###sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=np.log10(np.average(10.**h,axis=1)))),2)
+    sigmavalue = np.round(np.average((mids - meanvalue)**2, weights=np.log10(np.average(10.**h,axis=1))),2)
     # The alternative would be
     #plt.step(np.nanmean(h,axis=1)[:],mids,color="red",linewidth=3,label="mean")
     #meanvalue = np.round(np.average(mids,weights=np.nanmean(h,axis=1)[:]),2)
@@ -1385,7 +1799,7 @@ def show_Apar_map(ref_image,target_image,
     fig = plt.figure(figsize=(11,12))
     #fig = plt.figure(figsize=(15,10))
     if titlename=='':   
-        fig.suptitle('Accurray map', fontsize=16)
+        fig.suptitle('A-par map', fontsize=16)
     else:    
         fig.suptitle(titlename, fontsize=16)
 
@@ -1394,7 +1808,8 @@ def show_Apar_map(ref_image,target_image,
 
     # Panel #1: Reference
     ax1 = plt.subplot(grid[0, 0])
-    image = fits.open(ref_image+".fits")
+    image = fits.open(ref_image+"_masked.fits")
+    flux0 = np.round(imstat(ref_image+"_masked.fits")["flux"][0])
     # get min/max values
     #vmin , vmax = np.min(image[0].data[-np.isnan(image[0].data)]), np.max(image[0].data[-np.isnan(image[0].data)])
     vmin , vmax = np.min(image[0].data[~np.isnan(image[0].data)]), np.max(image[0].data[~np.isnan(image[0].data)])
@@ -1403,15 +1818,15 @@ def show_Apar_map(ref_image,target_image,
     channel=int(channel)
     if (Ndims[0] == 2):
         # Continuum
-        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet')
+        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
     else:
         # Cubes
-        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap='jet')
+        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
     # Plot parameters, limits, axis, labels ...
     plt.gca().invert_yaxis()
-    cbar = plt.colorbar(im, ax=ax1,orientation='vertical')
+    cbar = plt.colorbar(im, ax=ax1,orientation='vertical', fraction=0.05, shrink = 0.75)
     cbar.ax.set_ylabel('Flux (image units)', fontsize=15)
-    plt.text(0.1,0.1,"Reference", bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+    plt.text(0.1,0.1,"Reference: " + "Flux = " +str(flux0), bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
     plt.xlabel("X (pixel units)",fontsize=15)
     plt.ylabel("Y (pixel units)",fontsize=15)
     plt.title(" Reference (Chan.# " + str(channel) + ")")
@@ -1419,23 +1834,24 @@ def show_Apar_map(ref_image,target_image,
     # Panel #2: Target image at Reference resolution
     ax1 = plt.subplot(grid[0, 1])
     image = fits.open(target_image+"_convo2ref.fits")
+    flux1 = np.round(imstat(target_image+"_convo2ref.fits")["flux"][0])
     # Continuum or cube?
     Ndims = np.shape(np.shape(image[0].data))
     if (Ndims[0] == 2):
         # Continuum
-        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet')
+        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
     else:
         # Cubes
-        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap='jet')
+        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
     # Plot parameters, limits, axis, labels ...
     plt.gca().invert_yaxis()
-    cbar = plt.colorbar(im, ax=ax1,orientation='vertical')
+    cbar = plt.colorbar(im, ax=ax1,orientation='vertical', fraction=0.05, shrink = 0.75)
     cbar.ax.set_ylabel('Flux (image units)', fontsize=15)
     #plt.text(0.1,0.1,"Target", bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
     if labelname=='':
-        plt.text(0.1,0.1,"Target", bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+        plt.text(0.1,0.1,"Target: " + "Flux = " +str(flux1), bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
     else:
-        plt.text(0.1,0.1,labelname, bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+        plt.text(0.1,0.1,labelname + ": Flux = " +str(flux1), bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
 
     plt.xlabel("X (pixel units)",fontsize=15)
     plt.ylabel("Y (pixel units)",fontsize=15)
@@ -1452,18 +1868,19 @@ def show_Apar_map(ref_image,target_image,
     if (Ndims[0] == 2):
         # Continuum
         im = ax1.imshow(image[0].data,vmin=-1.1,vmax=1.1,cmap='bwr_r')
-        cp = ax1.contour(image[0].data,levels=contours,colors="grey")
-        ax1.clabel(cp,fontsize=10,colors="grey",fmt="%.2f",inline=1)
+        #cp = ax1.contour(image[0].data,levels=contours,colors="grey")      # removed otherwise too crowded in real maps
+        #ax1.clabel(cp,fontsize=10,colors="grey",fmt="%.2f",inline=1)
     else:
         # Cubes
         im = ax1.imshow(image[0].data[channel],vmin=-1.1,vmax=1.1,cmap='bwr_r')
-        cp = ax1.contour(image[0].data[channel],levels=contours,colors="grey")
-        ax1.clabel(cp,fontsize=10,colors="grey",fmt="%.2f")
+        #cp = ax1.contour(image[0].data[channel],levels=contours,colors="grey")     # removed otherwise too crowded in real maps
+        #ax1.clabel(cp,fontsize=10,colors="grey",fmt="%.2f")
     # Plot parameters, limits, axis, labels ...
-    cbar = plt.colorbar(im, ax=ax1,orientation='vertical')
-    cbar.ax.set_ylabel('Accuracy parameter', fontsize=15)
+    cbar = plt.colorbar(im, ax=ax1,orientation='vertical', fraction=0.05, shrink = 0.75)
+    cbar.ax.set_ylabel('A-par', fontsize=15)
     plt.gca().invert_yaxis()
     plt.show()
+    plt.text(0.1,0.1," Flux recovered = " +str(np.round(100.*flux1/flux0,1)) + "%", bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
     plt.xlabel("X (pixel units)",fontsize=15)
     plt.ylabel("Y (pixel units)",fontsize=15)
     plt.title(" Accuracy map (Chan.# " + str(channel) + ")")
@@ -1471,24 +1888,30 @@ def show_Apar_map(ref_image,target_image,
     # Panel #4: Histogram
     ax2 = plt.subplot(grid[1, 1])
     nchans, b, mids, h = get_ALLvalues(FITSfile=target_image+"_convo2ref_Apar.fits",xmin=-1.525,xmax=1.525,xstep=0.05)
-    plt.plot(mids,h,label="ALL pixels",linewidth=3,c="red")
+    ax2.plot(mids,h,label="ALL pixels",linewidth=3,c="red")
+    # adjust y-range if needed
+    yplot_min, yplot_max =  plt.gca().get_ylim()
+    if (yplot_min/yplot_max <= 1E-3):
+        ax2.set_ylim(yplot_max/1E3,yplot_max*1.05)
     # Mean value
     meanvalue = np.round(np.average(mids,weights=h),2)
-    sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=h)),2)
-    plt.vlines(meanvalue,np.min(h[h>0]),np.max(h),linestyle="dotted",color="red",linewidth=3,label="A = "+str(meanvalue)+ " +/- " + str(sigmavalue),alpha=1.,zorder=-2)
+    #####sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=h)),2)
+    sigmavalue = np.round(np.average((mids - meanvalue)**2, weights=h),2)
+    ax2.vlines(meanvalue,np.min(h[h>0]),np.max(h),linestyle="dotted",color="red",linewidth=3,label="A = "+str(meanvalue)+ " +/- " + str(sigmavalue),alpha=1.,zorder=-2)
     # Print results on screen
     print(" Accuracy = " + str(meanvalue) + " +/- " + str(sigmavalue))
     # Continuum or cube
     if (Ndims[0] > 2): # cubes only
         nchans_chan, b_chan, mids_chan, h_chan = get_CHANvalues(FITSfile=target_image+"_convo2ref_Apar.fits",xmin=-1.525,xmax=1.525,xstep=0.05,channel=channel)
-        plt.plot(mids_chan,h_chan,label="Channel # " +str(channel),c="blue",linewidth=3,linestyle="dotted")
+        ax2.plot(mids_chan,h_chan,label="Channel # " +str(channel),c="blue",linewidth=3,linestyle="dotted")
     # Plot limits, labels, axis...
-    plt.vlines(0.,np.min(h[h>0]),np.max(h),linestyle="--",color="black",linewidth=3,label="Goal",alpha=1.,zorder=-2)
-    plt.xlim(-1.1,1.1)
-    plt.yscale('log')   # Make y axis in log scale
-    plt.legend(loc="lower right")
-    plt.xlabel("Accuracy parameter",fontsize=20)
-    plt.ylabel(r'Number of pixels',fontsize=20)
+    ax2.vlines(0.,np.min(h[h>0]),np.max(h),linestyle="--",color="black",linewidth=3,label="Goal",alpha=1.,zorder=-2)
+    ax2.set_xlim(-1.1,1.1)
+    #ax2.set_yscale('log')   # Make y axis in log scale
+    ax2.legend(loc="lower right")
+    ax2.set_xlabel("A-par",fontsize=18)
+    ax2.set_ylabel(r'# of pixels',fontsize=18)
+    ax2.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
     # Save plot?
     if save == True:
         if plotname == '':
@@ -1538,7 +1961,8 @@ def show_Fidelity_map(ref_image,target_image,
 
     # Panel #1: Reference
     ax1 = plt.subplot(grid[0, 0])
-    image = fits.open(ref_image+".fits")
+    image = fits.open(ref_image+"_masked.fits")
+    flux0 = np.round(imstat(ref_image+"_masked.fits")["flux"][0])
     # get min/max values
     #vmin , vmax = np.min(image[0].data[-np.isnan(image[0].data)]), np.max(image[0].data[-np.isnan(image[0].data)])
     vmin , vmax = np.min(image[0].data[~np.isnan(image[0].data)]), np.max(image[0].data[~np.isnan(image[0].data)])
@@ -1547,15 +1971,15 @@ def show_Fidelity_map(ref_image,target_image,
     channel=int(channel)
     if (Ndims[0] == 2):
         # Continuum
-        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet')
+        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
     else:
         # Cubes
-        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap='jet')
+        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
     # Plot parameters, limits, axis, labels ...
     plt.gca().invert_yaxis()
-    cbar = plt.colorbar(im, ax=ax1,orientation='vertical')
+    cbar = plt.colorbar(im, ax=ax1,orientation='vertical', fraction=0.05, shrink = 0.75)
     cbar.ax.set_ylabel('Flux (image units)', fontsize=15)
-    plt.text(0.1,0.1,"Reference", bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+    plt.text(0.1,0.1,"Reference:"  + "Flux = " +str(flux0), bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
     plt.xlabel("X (pixel units)",fontsize=15)
     plt.ylabel("Y (pixel units)",fontsize=15)
     plt.title(" Reference (Chan.# " + str(channel) + ")")
@@ -1563,22 +1987,23 @@ def show_Fidelity_map(ref_image,target_image,
     # Panel #2: Target image at Reference resolution
     ax1 = plt.subplot(grid[0, 1])
     image = fits.open(target_image+"_convo2ref.fits")
+    flux1 = np.round(imstat(target_image+"_convo2ref.fits")["flux"][0])
     # Continuum or cube?
     Ndims = np.shape(np.shape(image[0].data))
     if (Ndims[0] == 2):
         # Continuum
-        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet')
+        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
     else:
         # Cubes
-        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap='jet')
+        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
     # Plot parameters, limits, axis, labels ...
     plt.gca().invert_yaxis()
-    cbar = plt.colorbar(im, ax=ax1,orientation='vertical')
+    cbar = plt.colorbar(im, ax=ax1,orientation='vertical', fraction=0.05, shrink = 0.75)
     cbar.ax.set_ylabel('Flux (image units)', fontsize=15)
     if labelname=='':
-        plt.text(0.1,0.1,"Target", bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+        plt.text(0.1,0.1,"Target:"  + "Flux = " +str(flux1), bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
     else:
-        plt.text(0.1,0.1,labelname, bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+        plt.text(0.1,0.1,labelname  + ": Flux = " +str(flux1), bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
     plt.xlabel("X (pixel units)",fontsize=15)
     plt.ylabel("Y (pixel units)",fontsize=15)
     plt.title(" Target at ref. resolution (Chan.# " + str(channel) + ")")
@@ -1596,10 +2021,11 @@ def show_Fidelity_map(ref_image,target_image,
         # Cubes
         im = ax1.imshow(image[0].data[channel],vmin=1.,vmax=100,cmap='hot',norm=LogNorm())
     # Plot parameters, limits, axis, labels ...
-    cbar = plt.colorbar(im, ax=ax1,orientation='vertical')
+    cbar = plt.colorbar(im, ax=ax1,orientation='vertical', fraction=0.05, shrink = 0.75)
     cbar.ax.set_ylabel('Fidelity', fontsize=15)
     plt.gca().invert_yaxis()
     plt.show()
+    plt.text(0.1,0.1,"Flux recovered = " + str(np.round(100*flux1/flux0,1)) + "%", bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
     plt.xlabel("X (pixel units)",fontsize=15)
     plt.ylabel("Y (pixel units)",fontsize=15)
     plt.title(" Fidelity map (Chan.# " + str(channel) + ")")
@@ -1607,18 +2033,19 @@ def show_Fidelity_map(ref_image,target_image,
     # Panel #4: Histogram
     ax2 = plt.subplot(grid[1, 1])
     nchans, b, mids, h = get_ALLvalues(FITSfile=target_image+"_convo2ref_Fidelity.fits",xmin=0,xmax=100,xstep=0.5)
-    plt.plot(mids,h,label="ALL pixels",linewidth=3,c="red")
+    ax2.plot(mids,h,label="ALL pixels",linewidth=3,c="red")
     # Continuum or cube
     if (Ndims[0] > 2): # cubes only
         nchans_chan, b_chan, mids_chan, h_chan = get_CHANvalues(FITSfile=target_image+"_convo2ref_Fidelity.fits",xmin=0,xmax=100,xstep=0.5,channel=channel)
-        plt.plot(mids_chan,h_chan,label="Channel # " +str(channel),c="blue",linewidth=3,linestyle="dotted")
+        ax2.plot(mids_chan,h_chan,label="Channel # " +str(channel),c="blue",linewidth=3,linestyle="dotted")
     # Plot limits, labels, axis...
-    plt.xlim(1,100)
-    plt.xscale('log')
-    plt.yscale('log')   # Make y axis in log scale
-    plt.legend()
-    plt.xlabel("Fidelity",fontsize=20)
-    plt.ylabel(r'Number of pixels',fontsize=20)
+    ax2.set_xlim(0.5,100)
+    ax2.set_xscale('log')
+    ax2.set_yscale('log')   # Make y axis in log scale
+    ax2.legend()
+    ax2.set_xlabel("Fidelity",fontsize=18)
+    ax2.set_ylabel(r'Number of pixels',fontsize=18)
+    ax2.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
     # Save plot?
     if save == True:
         if plotname == '':
@@ -1730,7 +2157,7 @@ def genmultisps(fitsimages, save=False, plotname='', labelname='',
 
 
     # initialise plotting
-    fig, ax = pyplot.subplots(figsize = (8,8))
+    fig, ax = pyplot.subplots(figsize = (6,6))
 
     ## set plotting parameters
     majorYLocFactor = 2
@@ -1867,12 +2294,16 @@ def genmultisps(fitsimages, save=False, plotname='', labelname='',
         ax.set_xlim(np.max(logAngScales)+0.25, np.min(logAngScales) - 0.25)
 
         ## show fit limits ##
-        ax.axvline(logAngScales[lowCut_idx], color = IQA_colours[imnumber], linestyle = '-.')
-        ax.axvline(logAngScales[highCut_idx], color= IQA_colours[imnumber], linestyle = '--')
+        #ax.axvline(logAngScales[lowCut_idx], color = IQA_colours[imnumber], linestyle = '-.')
+        #ax.axvline(logAngScales[highCut_idx], color= IQA_colours[imnumber], linestyle = '--')
 
         imnumber += 1
     # end for
 
+    # Add freq. cuts and reshape plot
+    ax.axvline(logAngScales[lowCut_idx], color = "grey", linestyle = '-.')
+    ax.axvline(logAngScales[highCut_idx], color= "grey", linestyle = '--')
+    ax.set_xlim(logAngScales[lowCut_idx]+0.15,logAngScales[highCut_idx]-0.15)
 
     if pixUnits == True:
         ax.set_xlabel(r'$log_{10}\left(\rm 1/pix\right)$')
@@ -1880,6 +2311,7 @@ def genmultisps(fitsimages, save=False, plotname='', labelname='',
         ax.set_xlabel(r'$log_{10}\left(\rm arcsec\right)$')
 
     ax.set_ylabel(r'$log_{10}\left(\rm Power\right)$')
+    ax.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
     #pyplot.legend(loc='upper right', fontsize=6)
     pyplot.legend(loc='lower left')
     if titlename=='':
@@ -1903,6 +2335,275 @@ def genmultisps(fitsimages, save=False, plotname='', labelname='',
 
 
 
+
+def show_Apar_overview(ref_image,target_image,
+                  channel=0, adjustDR=True,Nbins=10.,
+                  save=False, plotname='',
+                  labelname='', titlename=''
+                  ):
+    """
+    Display Accuracy maps (A. Hacar, Univ. of Vienna)
+    Arguments:
+     ref_image - reference image
+     target_image - imaged to be compared
+     channel - (for cubes only) channel to be compared (default = 0, aka continuum)
+     adjustDR - adjust dynamic range (default = True)
+     Nbins - number of bins in plot (default = 10)
+
+    Note:
+     Generate the necessary imaged (e.g. target_image_convo2ref.fits) using get_IQA()
+
+    Results: show_Apar_map will display a figure with 4 subpanels:
+     - [1] (Upper left)  Reference image
+     - [2] (Upper right) Target image at the resolution of the referenec
+     - [3] (Lower left)  Accuracy map
+     - [4] (Lower right) Histogram
+
+    """
+
+    # Figure
+    fig = plt.figure(figsize=(15,10))
+    #fig = plt.figure(figsize=(15,10))
+    if titlename=='':   
+        fig.suptitle('A-par map', fontsize=16)
+    else:    
+        fig.suptitle(titlename, fontsize=16)
+
+    grid = plt.GridSpec(ncols=3,nrows=2, wspace=0.3, hspace=0.5)
+    #grid = plt.GridSpec(ncols=2,nrows=2, wspace=0.3, hspace=0.3)
+
+    # Panel #1: Reference
+    ax1 = plt.subplot(grid[0, 0])
+    image = fits.open(ref_image+"_masked.fits")
+    flux0 = np.round(imstat(ref_image+"_masked.fits")["flux"][0])
+    # get min/max values
+    #vmin , vmax = np.min(image[0].data[-np.isnan(image[0].data)]), np.max(image[0].data[-np.isnan(image[0].data)])
+    vmin , vmax = np.min(image[0].data[~np.isnan(image[0].data)]), np.max(image[0].data[~np.isnan(image[0].data)])
+    # Continuum or cube?
+    Ndims = np.shape(np.shape(image[0].data))
+    channel=int(channel)
+    if (Ndims[0] == 2):
+        # Continuum
+        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
+    else:
+        # Cubes
+        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
+    # Plot parameters, limits, axis, labels ...
+    plt.gca().invert_yaxis()
+    cbar = plt.colorbar(im, ax=ax1,orientation='vertical', fraction=0.05, shrink = 0.75)
+    cbar.ax.set_ylabel('Flux (image units)', fontsize=15)
+    plt.text(0.1,0.1,"Reference: " + "Flux = " +str(flux0), bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+    plt.xlabel("X (pixel units)",fontsize=15)
+    plt.ylabel("Y (pixel units)",fontsize=15)
+    plt.title(" Reference (Chan.# " + str(channel) + ")")
+
+    # Panel #2: Target image at Reference resolution
+    ax1 = plt.subplot(grid[1,0])
+    image = fits.open(target_image+"_convo2ref.fits")
+    flux1 = np.round(imstat(target_image+"_convo2ref.fits")["flux"][0])
+    # Continuum or cube?
+    Ndims = np.shape(np.shape(image[0].data))
+    if (Ndims[0] == 2):
+        # Continuum
+        im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
+    else:
+        # Cubes
+        im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
+    # Plot parameters, limits, axis, labels ...
+    plt.gca().invert_yaxis()
+    cbar = plt.colorbar(im, ax=ax1,orientation='vertical', fraction=0.05, shrink = 0.75)
+    cbar.ax.set_ylabel('Flux (image units)', fontsize=15)
+    #plt.text(0.1,0.1,"Target", bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+    if labelname=='':
+        plt.text(0.1,0.1,"Target: " + "Flux = " +str(flux1), bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+    else:
+        plt.text(0.1,0.1,labelname + ": Flux = " +str(flux1), bbox={'facecolor': 'white', 'pad': 10},transform=ax1.transAxes)
+
+    plt.xlabel("X (pixel units)",fontsize=15)
+    plt.ylabel("Y (pixel units)",fontsize=15)
+    plt.title(" Target at ref. resolution (Chan.# " + str(channel) + ")")
+
+
+    # Panel #3: Apar-Histogram
+    ax3 = plt.subplot(grid[0,1])
+    nchans, b, mids, h = get_ALLvalues(FITSfile=target_image+"_convo2ref_Apar.fits",xmin=-1.525,xmax=1.525,xstep=0.05)
+    ax3.plot(mids,h,label="ALL pixels",linewidth=3,c="red")
+    # adjust y-range if needed
+    yplot_min, yplot_max =  plt.gca().get_ylim()
+    if (yplot_min/yplot_max <= 1E-3):
+        ax3.set_ylim(yplot_max/1E3,yplot_max*1.05)
+    # Mean value
+    meanvalue = np.round(np.average(mids,weights=h),2)
+    ####sigmavalue = np.round(np.sqrt(np.cov(mids, aweights=h)),2)
+    sigmavalue = np.round(np.average((mids - meanvalue)**2, weights=h),2)
+    ax3.vlines(meanvalue,np.min(h[h>0]),np.max(h),linestyle="dotted",color="red",linewidth=3,label="A = "+str(meanvalue)+ " +/- " + str(sigmavalue),alpha=1.,zorder=-2)
+    # Print results on screen
+    print(" Accuracy = " + str(meanvalue) + " +/- " + str(sigmavalue))
+    # Continuum or cube
+    if (Ndims[0] > 2): # cubes only
+        nchans_chan, b_chan, mids_chan, h_chan = get_CHANvalues(FITSfile=target_image+"_convo2ref_Apar.fits",xmin=-1.525,xmax=1.525,xstep=0.05,channel=channel)
+        ax3.plot(mids_chan,h_chan,label="Channel # " +str(channel),c="blue",linewidth=3,linestyle="dotted")
+    # Plot limits, labels, axis...
+    ax3.vlines(0.,np.min(h[h>0]),np.max(h),linestyle="--",color="black",linewidth=3,label="Goal",alpha=1.,zorder=-2)
+    ax3.set_xlim(-1.1,1.1)
+    ax3.set_yscale('log')   # Make y axis in log scale
+    ax3.legend(loc="lower right")
+    ax3.set_xlabel("A-par",fontsize=15)
+    ax3.set_ylabel(r'# of pixels',fontsize=15)
+    ax3.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
+
+    # Panel #4: Apar vs signal
+    ax4 = plt.subplot(grid[1, 1])
+    # Loop over all images
+    xmax0 = 0.0; xmin0 = 1E6    # Dummy values
+    im1 = fits.open(ref_image+".fits")       
+    im2 = fits.open(target_image+"_convo2ref_Apar.fits")
+    im3 = fits.open(target_image+"_convo2ref.fits")
+    # Define plot limits
+    if (Ndims[0] == 2):
+        xmin = np.percentile(im1[0].data[np.isnan(im1[0].data)==False],0.01) #np.im replaced by 0.01 percentile to avoid outlayers
+        xmax = np.max(im1[0].data[np.isnan(im1[0].data)==False])
+    else:
+        im1data = im1[0].data[channel]
+        im2data = im2[0].data[channel]
+        im3data = im3[0].data[channel]
+        xmin = np.percentile(im1data[np.isnan(im1data)==False],0.01) #np.im replaced by 0.01 percentile to avoid outlayers
+        xmax = np.max(im1data[np.isnan(im1data)==False])
+    if (xmax > xmax0):
+        xmax0=xmax+xmax/10. # Slightly larger
+    if (xmin < xmin0):       
+        xmin0=xmin
+    if (xmin < 0.0):          #Lydia's modification to avoid negative values!
+        xmin0=0.0001
+    if ((adjustDR == True) & (xmin/xmax < 1E-3)):
+        xmin0=xmax0/1E3	# avoid plots with dynamic range >1000
+    # Plot results
+    if (Ndims[0] == 2):
+        # Continuum
+        ax4.scatter(im1[0].data,im3[0].data,c="red",marker="o",rasterized=True,edgecolor='none',alpha=0.01)
+    else:
+        ax4.scatter(im1[0].data[channel],im3[0].data[channel],c="red",marker="o",rasterized=True,edgecolor='none',alpha=0.01)
+
+    # Goal (A-par = 0)
+    ax4.hlines(0.,xmin,xmax0,linestyle="--",color="black",linewidth=3,alpha=1.,zorder=2)
+
+    # Calculate mean and sigma
+    print("---------------------------------------------")
+    print(" A-par values per bin: ")
+    # Calculate bins & step in log-scale
+    steplog=(np.log10(xmax0)-np.log10(xmin0))/Nbins
+    xvalueslog=np.arange(np.log10(xmin0),np.log10(xmax0),steplog)
+    # back to linear scale
+    step=10.**steplog
+    xvalues=10.**xvalueslog
+    # Define stats vectors
+    means=np.zeros(len(xvalues))    # Mean
+    stds=np.zeros(len(xvalues)) # STD
+    medians=np.zeros(len(xvalues))  # Median
+    q1values=np.zeros(len(xvalues)) # Q1
+    q3values=np.zeros(len(xvalues)) # Q2
+    fluxreco=np.zeros(len(xvalues)) # Flux recovered per bin
+
+
+    count=0
+    for j in xvalueslog:
+        # Define bin ranges in log-space
+        idx = (im1[0].data >= 10.**j) & (im1[0].data < 10.**(j+steplog)) & (np.isnan(im1[0].data)==False) & (np.isfinite(im1[0].data)==True)
+	# Ref + Target_convo2ref images
+        values1 = im1[0].data[idx]
+        values1 = values1[ (np.isnan(values1)==False) & (np.isfinite(values1)==True) ] # remove Nan & Inf.
+        values3 = im3[0].data[idx]
+        values3 = values3[ (np.isnan(values3)==False) & (np.isfinite(values3)==True) ] # remove Nan & Inf.
+        # Apar image
+        values2 = im2[0].data[idx]
+        values2 = values2[ (np.isnan(values2)==False) & (np.isfinite(values2)==True) ] # remove Nan & Inf.
+        # Stats
+        if (np.shape(values2)[0] > 0):
+                means[count] = np.mean(values2)  # Mean
+                stds[count] = np.std(values2)    # STD
+                medians[count] = np.median(values2)  # Median
+                q1values[count] = np.percentile(values2, 10) # 10% Quartile
+                q3values[count] = np.percentile(values2, 90) # 90% Quartile
+                fluxreco[count] = np.sum(values3)/np.sum(values1)
+        # Show results on screen
+        print("Bin "+str(count+1)+": Ref.Flux = " + str(np.round(10.**(j+steplog/2.),2)) + " ; A = " + str(np.round(means[count],2)) + " +/- " + str(np.round(stds[count],2)) + " ; [Q10,Q90] = ["+ str(np.round(q1values[count],3)) + " , " + str(np.round(q3values[count],3)) +"]; Flux recovered = " + str(np.round(100.*fluxreco[count],1))+"%")
+        # Counter +1
+        count+=1
+        #
+
+    # Plot results
+    if labelname=='':
+            ax4.scatter(im1[0].data,im2[0].data,c="red",marker="o",rasterized=True,label=target_image,edgecolor='none',alpha=0.01)
+    else:    
+            ax4.scatter(im1[0].data,im2[0].data,c="red",marker="o",rasterized=True,label=labelname,edgecolor='none',alpha=0.01)
+
+    count=0
+    for j in xvalueslog:
+            # Define bin ranges in log-space
+            idx = (im1[0].data >= 10.**j) & (im1[0].data < 10.**(j+steplog)) & (np.isnan(im1[0].data)==False) & (np.isfinite(im1[0].data)==True)
+            values = im3[0].data[idx]
+            values = values[ (np.isnan(values)==False) & (np.isfinite(values)==True) ] # remove Nan & Inf.
+            # Stats
+            if (np.shape(values)[0] > 0):
+                means[count] = np.mean(values)  # Mean
+                stds[count] = np.std(values)    # STD
+                medians[count] = np.median(values)  # Median
+                q1values[count] = np.percentile(values, 10) # 10% Quartile
+                q3values[count] = np.percentile(values, 90) # 90% Quartile
+            # Counter +1
+            count+=1
+            #
+    # Display mean and STD
+    ax4.errorbar(10.**(xvalueslog+steplog/2.),means, yerr=stds, fmt='o',c="blue",label=r"|y|$\pm 1 \sigma$ ",linewidth=2,markersize=10,zorder=2,capsize=5)
+
+    # Show A values lines
+    xvalues=np.arange(xmin0,xmax0,(xmax0-xmin0)/20.)
+    ax4.plot(xvalues,xvalues,c="k",zorder=2,linewidth=3,linestyle="--",label="Goal (linear correlation; A-par = 0.0)")
+    ax4.text((xmax0-xmin0)/3.,(xmax0-xmin0)/3.,"A=0",rotation=45,ha='center',va='center',rotation_mode="anchor",bbox=dict(boxstyle='square',facecolor='white', edgecolor='black'))
+    # Note that the value of A=-1 needs values of Target=0, which is not allowed in ylog-plots
+    for k in np.array([-0.75,-0.5,-0.25,0.25,0.5,0.75,1.0]):
+        def Avalues(A,x):
+            return A*x+x
+        yvalues=Avalues(A=k,x=xvalues)
+        ax4.plot(xvalues,yvalues,c="grey",zorder=2,linestyle="dashed",alpha=0.5)
+        ax4.text((xmax0-xmin0)/3.,Avalues(A=k,x=(xmax0-xmin0)/3.),"A="+str(k),rotation=45,ha='center',va='center',rotation_mode="anchor",clip_on=True,size=10.,color="grey",zorder=2)
+
+    # Plot limits, legend, labels...
+    ax4.set_xlim(xmin0,xmax0)
+    ax4.set_ylim(xmin0,xmax0)
+    ax4.set_xscale('log')
+    ax4.set_yscale('log')
+    ax4.tick_params(direction='in',axis="both",which="both",top=True,right=True,labelsize=10)
+    # Legend and labels
+    ax4.set_ylabel(r" Target flux (image units)",fontsize=15)
+    ax4.set_xlabel(r" Reference flux (image units)",fontsize=15)
+
+
+
+
+    # Panel #5: Apar vs signal
+    ax5 = plt.subplot(grid[1, 2])
+
+
+
+
+
+
+
+    # Save plot?
+    if save == True:
+        if plotname == '':
+            plotname="Accuracy_map_tmp"
+        plt.savefig(plotname+'.png')
+        print(" See results: "+plotname+".png")
+        
+        
+        
+        
+        plt.close()
+    # out
+    print("---------------------------------------------")
+    return True
 
 
 
@@ -2003,7 +2704,7 @@ def get_aperture(fitslist,position=(1,1),Nbeams=10):
     vmin , vmax = np.min(image[0].data[~np.isnan(image[0].data)]), np.max(image[0].data[~np.isnan(image[0].data)])
 
     # Plot image
-    im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet',aspect='equal')
+    im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap",aspect='equal')
     # Get a marker at the position
     ax1.scatter(position[0],position[1],marker="+",c="white",s=300,linewidth=5)
     ax1.scatter(position[0],position[1],marker="+",c="red",s=300,linewidth=2)
@@ -2018,7 +2719,7 @@ def get_aperture(fitslist,position=(1,1),Nbeams=10):
 
     # Panel #2: Zoom (x20)
     ax2 = plt.subplot(grid[1:3, 1])
-    im = ax2.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet',aspect='equal')
+    im = ax2.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap",aspect='equal')
     zoomin = np.shape(image[0].data)[0]/20.
     ax2.set_xlim(position[0]-zoomin,position[0]+zoomin)
     ax2.set_ylim(position[1]-zoomin,position[1]+zoomin)
@@ -2046,7 +2747,7 @@ def get_aperture(fitslist,position=(1,1),Nbeams=10):
         # Use image 0 as reference
         if i == fitslist[0]:
             flux0 = flux
-            plt.axvline(Beamsize,c="k", linewidth=2,linestyle="dotted",label="Beamsize")
+            plt.vlines(Beamsize,c="k", linewidth=2,linestyle="dotted",label="Beamsize")
             ymin0 = 1.0
         else:
             # Plot
@@ -2147,12 +2848,12 @@ def show_residual_maps(target_image,target_mask,
         channel=int(channel)
         if (Ndims[0] == 2):
             # Continuum
-            im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet')
+            im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
             mask= ax1.contour(mask[0].data, levels=[1], colors='black', alpha=0.5)
             #mask= ax1.contour(mask[0].data, levels=np.logspace(-4.7, -3., 10), colors='white', alpha=0.5)
         else:
             # Cubes
-            im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap='jet')
+            im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
             mask= ax1.contour(mask[0].data[channel], levels=[1], colors='black', alpha=0.5)
 
         # Plot parameters, limits, axis, labels ...
@@ -2202,10 +2903,10 @@ def show_residual_maps(target_image,target_mask,
     # Ndims = np.shape(np.shape(image[0].data))
     # if (Ndims[0] == 2):
     #     # Continuum
-    #     im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet')
+    #     im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
     # else:
     #     # Cubes
-    #     im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap='jet')
+    #     im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
     # # Plot parameters, limits, axis, labels ...
     # plt.gca().invert_yaxis()
     # cbar = plt.colorbar(im, ax=ax1,orientation='vertical')
@@ -2308,16 +3009,16 @@ def show_combi_maps(target_image,#target_mask,
         channel=int(channel)
         if (Ndims[0] == 2):
             # Continuum
-            im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet')
+            im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
             #mask= ax1.contour(mask[0].data, levels=[1], colors='white', alpha=0.5)
             ###mask= ax1.contour(mask[0].data, levels=np.logspace(-4.7, -3., 10), colors='white', alpha=0.5)
         else:
             # Cubes
 
             if Ndims[0]==4 and np.shape(image[0].data)[0]==1:
-                im = ax1.imshow(image[0].data[0][channel],vmin=vmin,vmax=vmax,cmap='jet')
+                im = ax1.imshow(image[0].data[0][channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
             else:
-                im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap='jet')
+                im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
     
             #mask= ax1.contour(mask[0].data[channel], levels=[1], colors='white', alpha=0.5)
 
@@ -2368,10 +3069,10 @@ def show_combi_maps(target_image,#target_mask,
     # Ndims = np.shape(np.shape(image[0].data))
     # if (Ndims[0] == 2):
     #     # Continuum
-    #     im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap='jet')
+    #     im = ax1.imshow(image[0].data,vmin=vmin,vmax=vmax,cmap="CMRmap")
     # else:
     #     # Cubes
-    #     im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap='jet')
+    #     im = ax1.imshow(image[0].data[channel],vmin=vmin,vmax=vmax,cmap="CMRmap")
     # # Plot parameters, limits, axis, labels ...
     # plt.gca().invert_yaxis()
     # cbar = plt.colorbar(im, ax=ax1,orientation='vertical')
