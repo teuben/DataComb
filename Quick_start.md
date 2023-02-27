@@ -15,7 +15,7 @@ The general overview of the steps to get combination images:
 Before following this guide, you should have already:
 
 - Installed CASA 6
-	- Ensure astropy is installed
+	- Ensure **astropy** is installed
 - Installed analysisutils
 - Downloaded any example data and know the path to the data
 - Configured your local paths (see [Preparation.md](Preparation.md))
@@ -26,11 +26,12 @@ You need to have a `DC_pars.py` for the data combination script to run. For your
 simply copy an example parameter file and edit. For this example, we will use `DC_pars_M100.py`.  
 
 ```bash
-  cp DC_pars_M100.py DC_pars.py
+  cp templates/DC_pars_M100.py DC_pars.py
 ```
-Make sure that you have the M100 data in the correct directory and have set up your local directories correctly.
 
-## (Optional) Step 2: Execute `DC_locals.py`
+Make sure that you have the data in the correct directory and have set up your local directories correctly.
+
+## Step 2 (Optional): Execute `DC_locals.py`
 
 If you DID NOT put a reference to `DC_locals.py` in your `~/.casa/startup.py` file,
 you need to execute `DC_locals.py` in your current CASA session (and you will have
@@ -40,7 +41,7 @@ to continue to do so each time you start a new CASA session to work with this da
   execfile("DC_locals.py")
 ```
 
-Q: do we need globals() here ?
+*Q: do we need globals() here ?*
 
 ## Step 3: Run `DC_script.py`
 

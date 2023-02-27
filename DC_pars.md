@@ -1,14 +1,4 @@
-* separate those that are critical for running the scripts and those that are for tweaking your images.
-* What you need to run YOUR data through DC_script
-
-
-
-
-
-
-
-
-# DC_pars*
+# DC_pars
 
 ## Select processing and combination steps to execute
 
@@ -47,14 +37,12 @@ It generates lists of filenames for each combination method with the wanted iter
 
 ## Paths to the input and output files
 
-If you do not wish to concatenate data, because you already have your data concatenated or want to work on only one interferometric data set, then go to the next section.
-
 It is helpful to use different folders for the input and output data. If you want to concatenate several ALMA 12m or 7m data sets, you can put them into the ``pathtoconcat``-folder
 
       pathtoconcat = 'path-to-input-data'  
-      # path to the folder with the files to be concatenated and the input SD image
+      # path to the folder with the files to be concatenated, and the input SD image
 
-In our examples, this folder contains also the SD image!
+In our examples, this folder also contains also the SD image.
 The ``pathtoimage``-folder is the actual working folder and holds the processing, combination, and assessment products.
 
       pathtoimage = 'path-to-products'                         
@@ -63,6 +51,8 @@ The ``pathtoimage``-folder is the actual working folder and holds the processing
  
 ## Setup for concatenation of several ms - data sets (step 0)
  
+If you do not wish to concatenate data, because you already have your data concatenated or want to work on only one interferometric data set, then go to the next section.
+
 If you want to concatenate several ALMA data sets list the 12m data sets in ``a12m`` and ``a7m``, e.g.
 
       a12m = [pathtoconcat + 'name12m1.ms', pathtoconcat + 'name12m2.ms', ...]
@@ -73,32 +63,32 @@ and their corresponding data weights in the concatenation (visweight-parameter i
       weight12m = [1.,1.,...]
       weight7m  = [1.,1.,...]
 
-In most cases, the weights are 1.0, except for 7m data, that have been simulated (0.166 = (D_7m/D_12m)^4 *(t_int_7m/t_int_12m)) or that have been manually calibrated in a CASA version < 4.3.0. Follow the instructions on https://casaguides.nrao.edu/index.php/DataWeightsAndCombination to prepare your data and choose the weights correctly. 
+In most cases, the weights are 1.0 if data were calibrated with CASA version 4.3.0 and later.  Follow the instructions on https://casaguides.nrao.edu/index.php/DataWeightsAndCombination to prepare your data and choose the weights correctly. 
 
-NEW: You should make sure that you input data contains solely the science observation on the target (i.e. intent = '*TARGET*') and no data for other observing intents. This is especially relevant for the combination of 12m data in TP2VIS-mode.
+**Note**: You should make sure that you input data contains solely the science observation on the target (i.e. intent = '*TARGET*') and no data for other observing intents. This is especially relevant for the combination of 12m data in TP2VIS-mode.
 
 The ``concatms``-parameter holds the file name of the concatenated data sets.
 
       concatms = pathtoimage + 'skymodel-b_120L.alma.all_int-weighted.ms'       
-      # path and name of concatenated file (e.g. blabla.ms)
+      # path and name of concatenated file (e.g. output/concatenateddata.ms)
 
 
 
 
 ## Files and base-names used by the combination methods (steps 1 - 8)
 
-      vis            = ''                                          # set to '' is concatms is to be used, else define your own ms-file
+      vis            = ''                                          # set to '' if concatms is to be used, else define your own ms-file
       sdimage_input  = pathtoconcat + 'skymodel-b_120L.sd.image'
       imbase         = pathtoimage  + 'skymodel-b_120L'            # path + image base name
       sdbase         = pathtoimage  + 'skymodel-b_120L'            # path + sd image base name
       
-If you don't need/want to concatenate data, skip thesteps=[0] and give the ``vis`` the path/name of the file or a list of files you want to image. If you leave ``vis`` blank, it will use the ``concatms`` as input. The ``sdimage_input`` links to the input SD image. All image processing results are stored under file names starting with the base names ``imbase`` (interferometric and SD-combined) or ``sdbase`` (SD alone). If the sdbase-name should not reflect any important information, it can be the same as imbase - an ``.SD.`` extension is added to the sdbase-name automatically to differentiation.
+If you don't need/want to concatenate data, skip thesteps=[0] and give the paremeter ``vis`` the path/name of the file or a list of files you want to image. If you leave ``vis`` blank, it will use the ``concatms`` as input. The ``sdimage_input`` links to the input SD image. All image processing results are stored under file names starting with the base names ``imbase`` (interferometric and SD-combined) or ``sdbase`` (SD alone). If the sdbase-name should not reflect any important information, it can be the same as imbase - an ``.SD.`` extension is added to the sdbase-name automatically to differentiate.
 
 
 ## Setup of the clean parameters (steps 1, 2, 5, 6, 7)
 
 The parameters in this section define the clean parameters common for all tclean instances used in the combination methods including SDINT and TP2VIS
-All parameters starting with ``t_`` except from ``t_maxscale`` are set in the same way as for the stand-alone tclean-task (CASA-native).
+All parameters starting with ``t_`` except for ``t_maxscale`` are set in the same way as for the CASA [**tclean**](https://casadocs.readthedocs.io/en/stable/api/tt/casatasks.imaging.tclean.html) task (with corresponding CASA-native subparameters).
 
 
 ### general  - data selection and image parameters
@@ -109,7 +99,7 @@ All parameters starting with ``t_`` except from ``t_maxscale`` are set in the sa
        t_cell        = '0.21arcsec'   
        t_phasecenter = 'J2000 12:00:00 -35.00.00.0000'  
        
-### spectral mode - mfs -cube
+### spectral mode - mfs or cube
 The parameter ``mode`` indicates whether to perform continuum (``mfs``) or line (``cube``) imaging. 
 
       mode      = 'mfs'      # 'mfs' or 'cube'
@@ -118,17 +108,17 @@ DC_run.py offers two ways to define the spectral setup of a cube under the param
       
       specsetup =  'INTpar'  # 'SDpar' (use SD cube's spectral setup) or 'INTpar' (user defined cube setup)
       
-Setting it to ``INTpar`` requires the definition the number of channels, start channel and channel width - the latter being at least as large as the SD image channel width or larger, 
+Setting it to ``INTpar`` requires defining the number of channels, start channel and channel width - the latter being at least as large as the SD image channel width or larger, 
 
        t_start       = 0 
        t_width       = 1 
        t_nchan       = -1 
        t_restfreq    = '' 
 
-whereas setting it to ``SDpar`` automatically uses the channel setup of the SD image. In addition, for ``SDpar`` one can limit the channel range translated into the combined product by using only the channels between a ``startchan`` and ``endchan`` from the SD image, else they should be set to ``None``. 
+whereas setting it to ``SDpar`` automatically uses the channel setup of the SD image. In addition, for ``SDpar`` one can limit the channel range translated into the combined product by using only the channels between ``startchan`` and ``endchan`` from the SD image, else they should be set to ``None``. 
 
-       startchan = 30  #None  # start-value of the SD image channel range you want to cut out 
-       endchan   = 39  #None  #   end-value of the SD image channel range you want to cut out
+       startchan = 30  # start-value of the SD image channel range you want to cut out; default: None
+       endchan   = 39  # end-value of the SD image channel range you want to cut out; default: None
 
 If specsetup = ``INTpar``, the cut-out-channel inputs are ignored.
 In ``mode='mfs'``  , ``specsetup`` is set to ``nt1`` meaning the number of Taylor terms for mtmfs-clean. An mfs-clean corresponds then to a mtmfs-clean with nterms=1. Currently, mfs is the only continuum mode offered and ``nt1`` is only inserted for the name without any effect on the tclean parameters.
@@ -146,7 +136,7 @@ DC_run.py will create shapes of size 0 (point source), 1 arcsec, 3 arcsec, and 9
 
 
 
-### user interaction and iterations and threshold
+### user interaction, iterations and threshold
 With the parameter ``inter`` the user can choose between interactive (``IA``) and non-interactive (``nIA``) clean. The number of clean iterations to be executed is set under ``nit``. With ``t_cycleniter`` the number of minor cycle iterations before a major cycle is triggered can be restricted. For the default value of -1, CASA determines the cycleniter which is usually sufficient. The case of a poor PSF can require cycleniter of e.g. a few 10s (low SNR) to ~ 1000 (high SNR) to avoid the divergence of the clean process. The clean threshold ``t_threshold`` steers the depth of the clean, i.e. tclean stops at this peak flux level in the residual image.
 
       inter       = 'nIA'      # interactive ('IA') or non-interactive ('nIA')
@@ -156,13 +146,13 @@ With the parameter ``inter`` the user can choose between interactive (``IA``) an
 
 
 ### masking
-With the parameter ``masking`` the user can define the masking mode, i.e.
+With the parameter ``masking`` the user can define the masking mode, with options being:
 * loading a user defined mask file (``UM``, CASA-native subparameter ``t_mask``) 
 * let tclean iteratively find and add clean mask regions (``AM`` - 'auto-multithreshold' in tclean, CASA-native subparameters ``t_sidelobethreshold, t_noisethreshold, t_lownoisethreshold, t_minbeamfrac, t_growiterations, t_negativethreshold``), 
 * use the primary beam as a mask (``PB``, CASA-native subparameter ``t_pbmask`` for fluxlevel). 
 * adjust a threshold-based mask from the interferometric and/or the SD-image (``SD-INT-AM``, subparameters ``smoothing, RMSfactor, cube_rms, cont_chans, sdmasklev, tclean_SDAMmask, hybrid_SDAMmask, sdint_SDAMmask, TP2VIS_SDAMmask``, see section below)
 
-      masking              = 'SD-INT-AM'    # 'UM' (user mask), 'SD-INT-AM' (SD+INT+AM mask)), 'AM' ('auto-multithresh') or 'PB' (primary beam)
+      masking              = 'SD-INT-AM'    # 'UM' (user mask), 'SD-INT-AM' (SD+INT+AM mask), 'AM' ('auto-multithresh') or 'PB' (primary beam)
        t_mask              = '' 
        t_pbmask            = 0.4
        t_sidelobethreshold = 2.0 
@@ -174,12 +164,12 @@ With the parameter ``masking`` the user can define the masking mode, i.e.
 
 In most cases, ``masking = 'AM'`` with its subparameters set to default (as above) is the best choice, but tends to fail for extremely extended emission.
 
-NEW I.E. SHIFTED: The ``UM``- and the ``SD-INT-AM``-mode are designed such that a user-defined fraction of the tclean iterations 
+**Special feature:** The ``UM``- and the ``SD-INT-AM``-mode are designed such that a user-defined fraction of the tclean iterations 
 
        fniteronusermask = 0.3   # valid between 0.0 an 1.0
        
-is spent on the provided mask. Once the stopping-threshold or interation limit ``fniteronusermask``*``nit`` is reached, tclean is restarted in ``AM``-mode and continues cleaning also on regions outside the providedmask until the threshold or the (1-``fniteronusermask``)*``nit`` is reached. 
-With n ``fniteronusermask`` = 0.0, DC_run loads the provided mask with one iteration and then moves over to the ``AM``-mode. An ``fniteronusermask`` = 1.0 makes DC_run work solely on the provided mask for all iterations. Both extremes can give insufficient cleaning results, therefore a flexible mixture of the two modes is introduced by the 
+is spent on the provided mask. Once the stopping-threshold or interation limit ``fniteronusermask`` $\times$ ``nit`` is reached, tclean is restarted in ``AM``-mode and continues cleaning also on regions outside the providedmask until the threshold or the (1-``fniteronusermask``) $\times$ ``nit`` is reached. 
+With ``fniteronusermask`` = 0.0, DC_run loads the provided mask with one iteration and then moves over to the ``AM``-mode. An ``fniteronusermask`` = 1.0 makes DC_run work solely on the provided mask for all iterations. Both extremes can give insufficient cleaning results, therefore a flexible mixture of the two modes is introduced by the 
 ``fniteronusermask``-parameter.
        
        
@@ -338,6 +328,20 @@ To exclude low flux values from the assessment, you can set a threshold below wh
       assessment_thresh = 0.01        # default: None, option: None, 'clean-thresh', or flux value(float, translated units: Jy/bm), 
                                        # threshold mask to exclude low SNR pixels, if None, use rms measurement from threshold_mask for tclean (see SD-INT-AM)
                                        # also used as lower flux limit for moment 0 map creation
+
+
+### Notes:
+This workflow is created to demonstrate an entire combination and analysis process, and specific parameters are given for the example datasets (M100, Skymodel) that our working group has validated.  Pending additions/modifications include:
+
+* Separate those steps that are critical for running the scripts, from those that are for tweaking specific parameters of the imaging process.
+* Indicate what you need to run YOUR data through DC_script
+
+
+
+
+
+
+
 
 
 
