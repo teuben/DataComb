@@ -1657,6 +1657,7 @@ def get_values(FITSfile,xmin,xmax,xstep,inlog=False):
                 Histogram = copy.deepcopy(hist.T)   
             else:
                 Histogram = np.column_stack((Histogram,hist.T))
+            Histogram = np.float64(Histogram)
     return nchan, bins_histo, bins_mids, Histogram
 
 

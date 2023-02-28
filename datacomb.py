@@ -206,7 +206,7 @@ def derive_maxscale(vis, restfreq=''):
     radiantoarcsec = 3600. * 180 / np.pi
     
     mrs = 0.983 * c / freq / p05 * radiantoarcsec
-    mrsfac=0.2
+    mrsfac=0.5
     maxscale = mrs * mrsfac
     freqout=freq/10**9
     
