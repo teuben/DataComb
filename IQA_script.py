@@ -590,9 +590,10 @@ def get_IQA(ref_image = '',target_image=[''], pb_image=None, masking_RMS=None,
         # Mask it
         os.system("rm -rf " + target_image[j] + "_convo2ref_masked") 
         if do_mask:
-                immath(imagename='convo2ref',mode='evalexpr',expr='IM0',outfile='convo2ref_masked',mask='temp.mask_subimage')
+            drop_axis('convo2ref')
+            immath(imagename='convo2ref_subimage',mode='evalexpr',expr='IM0',outfile='convo2ref_masked',mask='temp.mask_subimage')
         else:
-                immath(imagename='convo2ref',mode='evalexpr',expr='IM0',outfile='convo2ref_masked',mask='mask("'+str(ref_image)+'")')
+            immath(imagename='convo2ref',mode='evalexpr',expr='IM0',outfile='convo2ref_masked',mask='mask("'+str(ref_image)+'")')
         os.system("rm -rf " + target_image[j] + "_convo2ref")
         os.system("mv convo2ref_masked " + target_image[j] + "_convo2ref")
         #

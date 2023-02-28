@@ -68,7 +68,7 @@ sdbase         = pathtoimage + 'M100-B3'  # path + sd image base name
 						
 t_spw         = '' 
 t_field       = ''
-t_imsize      = 560  
+t_imsize      = 768  
 t_cell        = '0.5arcsec' 
 t_phasecenter = 'J2000 12h22m54.9 +15d49m15'  	
 
@@ -96,7 +96,7 @@ t_maxscale = -1               # for 'MS': number for largest scale size ('arcsec
 ### user interaction and iterations and threshold
 
 inter       = 'nIA'           # interactive ('IA') or non-interactive ('nIA')
-nit         = 10000000        # number of iterations
+nit         = 1000000         # number of iterations
 t_cycleniter= -1              # number of minor cycle iterations before major cycle is triggered. default: -1 (CASA determined - usually sufficient), poor PSF: few 10s (low SNR) to ~ 1000 (high SNR)
 t_threshold = ''              # e.g. '0.1mJy', can be left blank -> DC_run will estimate from SD-INT-AM mask for all other masking modes, too
 
@@ -107,8 +107,8 @@ masking  = 'SD-INT-AM'        # 'UM' (user mask), 'SD-INT-AM' (SD+INT+AM mask), 
 t_mask              = ''      # specify for 'UM', mask name
 t_pbmask            = 0.2     # specify for 'PM', cut-off level
 t_sidelobethreshold = 2.0     # specify for 'AM', default: 2.0 
-t_noisethreshold    = 4.25    # specify for 'AM', default: 4.25 
-t_lownoisethreshold = 1.5     # specify for 'AM', default: 1.5             
+t_noisethreshold    = 6.0    # specify for 'AM', default: 4.25 
+t_lownoisethreshold = 3.0     # specify for 'AM', default: 1.5             
 t_minbeamfrac       = 0.3     # specify for 'AM', default: 0.3 
 t_growiterations    = 75      # specify for 'AM', default: 75 
 t_negativethreshold = 0.0     # specify for 'AM', default: 0.0 
@@ -120,7 +120,7 @@ fniteronusermask    = 0.7
 theoreticalRMS = False          # use the theoretical RMS from the template image's 'sumwt', instead of measuring the RMS in a threshregion and cont_chans range of a template image
 smoothing    = 2.               # smoothing of the threshold mask (by 'smoothing x beam')
 threshregion = ''               # emission free region in template continuum or channel image
-RMSfactor    = 0.5              # continuum rms level (not noise from emission-free regions but entire image)
+RMSfactor    = 1.0              # continuum rms level (not noise from emission-free regions but entire image)
 cube_rms     = 3.               # cube noise (true noise) x this factor
 cont_chans   = '1~7,64~69'      # line free channels for cube rms estimation
 sdmasklev    = 0.3              # maximum x this factor = threshold for SD mask
