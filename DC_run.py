@@ -33,7 +33,7 @@ import IQA_script as iqa
 reload(dc)
 reload(iqa)
 
-
+import copy
 import time
 start = time.time()
 
@@ -1280,17 +1280,6 @@ if mystep in thesteps:
     
     
     
-    #################### NOT YET WORKING !!! problems #######
-    #
-    #iqa.get_aperture(allcombimsfits,position=(1,1),Nbeams=10)
-    #
-    ##### !!!needs SD-fitsfile ----> to create in step 1 !!!!
-    
-    
-    
-    
-    
-    
     if skymodel!='':
     
         ########## Assessment with respect to SKYMODEL image ############
@@ -1327,13 +1316,6 @@ if mystep in thesteps:
         
         #labelnames
         allcombi = [a.replace(pathtoimage+sourcename+cleansetup+'.','').replace('.image.pbcor','') for a in allcombims]
-        
-        
-        ## step numbers 
-        #thesteps2 = map(str, thesteps)    
-        #stepsjoin=''.join(thesteps2)
-        #steps=stepsjoin.replace('0','').replace('1','').replace('8','')
-        #steplist='_s'+steps
         
         
         # get largest beam axes present in the input images and smooth model image to them
@@ -1427,21 +1409,14 @@ if mystep in thesteps:
                                   titlename='Combined maps in channel '+str(mapchan)+' from the chosen \n  combination methods for '+sourcename+cleansetup+'_'+str(i)
                               )    
         
-
-
-
-        
+       
         # make Apar and fidelity images
         
         iqa.get_IQA(ref_image = skymodelconv, target_image=allcombims, 
                     pb_image=allcombpbs[0], masking_RMS=image_rms, 
                     target_beam_index=0) #, pbval=pbval)
    
-        
-        
-        
-         
-        
+
         
         if mode=='cube':   
             iqa.Compare_Apar_cubes(ref_image = skymodelconv, 
