@@ -1,5 +1,9 @@
 # Data Combination Project
 
+The work in this repository has been presented by: **Plunkett, Hacar, Moser-Fischer, Petry, et al. (2023)** (soon to be on Arxiv, and accepted to PASP). While we want to get the manuscript and code out as soon as possible, *please be patient as we clean up the code base.*  
+
+# Overview: 
+
 1. If you want to (more quickly) get combined images, go directly to [Quick_start.md](Quick_start.md),
 2. If you want to understand the steps, go to [Overview.md](Overview.md),
 3. [Advanced users] If you want adjust parameters and perform data combination on your own data, go to [DC_pars.md](DC_pars.md).
@@ -57,5 +61,10 @@ of the data, and the Python module **IQA_script.py** for the assessment of the c
 Both modules can be used as a stand-alone.
 
 A quick start guide is given in	[Quick_start](Quick_start.md).
+
+# Want to know more? 
+If you use the code and/or techniques presented in this repository, please cite: Plunkett, Hacar, Moser-Fischer, Petry, et al. (2023) *will be updated with full reference*
+
+The corresponding author of Plunkett, Hacar, Moser-Fischer, Petry, et al. (2023) is Adele Plunkett (aplunket@nrao.edu).  Some ongoing testing and features will be planned. Please contact the authors, or open an "issue" to report any particular bugs encountered or suggest features. 
 
 
