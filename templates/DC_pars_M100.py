@@ -16,7 +16,7 @@ step_title = {0: 'Concat',
               8: 'Assessment of the combination results'
               }
 
-thesteps=[0,1,2,3,4,5,6,7,8]
+thesteps=[0,1,2,3,4,5,6,8] # omit TP2VIS
 
 dryrun = False    # False to execute combination, True to gather filenames only
 
@@ -107,8 +107,8 @@ masking  = 'SD-INT-AM'        # 'UM' (user mask), 'SD-INT-AM' (SD+INT+AM mask), 
 t_mask              = ''      # specify for 'UM', mask name
 t_pbmask            = 0.2     # specify for 'PM', cut-off level
 t_sidelobethreshold = 2.0     # specify for 'AM', default: 2.0 
-t_noisethreshold    = 6.0    # specify for 'AM', default: 4.25 
-t_lownoisethreshold = 3.0     # specify for 'AM', default: 1.5             
+t_noisethreshold    = 4.25    # specify for 'AM', default: 4.25 
+t_lownoisethreshold = 1.5     # specify for 'AM', default: 1.5             
 t_minbeamfrac       = 0.3     # specify for 'AM', default: 0.3 
 t_growiterations    = 75      # specify for 'AM', default: 75 
 t_negativethreshold = 0.0     # specify for 'AM', default: 0.0 
