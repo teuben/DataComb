@@ -1,6 +1,15 @@
-# Data Combination Project
+# Data Combination Project (DataComb)
 
-The work in this repository has been presented by: **Plunkett, Hacar, Moser-Fischer, Petry, et al. (2023)** (soon to be on Arxiv, and accepted to PASP). While we want to get the manuscript and code out as soon as possible, *please be patient as we clean up the code base.*  
+**DataComb** is a set of python scripts that will aid you in combining
+radio interferometric and single dish observations, and obtain
+quantitave measures of how different techniques perform. The scripts
+should work with CASA 6.x, and also require both CASA and astropy to
+be installed.
+
+The work in this repository has been presented by: **Plunkett, Hacar,
+Moser-Fischer, Petry, et al. (2023)** (https://ui.adsabs.harvard.edu/abs/2023PASP..135c4501P)
+While we want to get the manuscript and code out as
+soon as possible, *please be patient as we clean up the code base.*
 
 # Overview: 
 
