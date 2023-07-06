@@ -147,6 +147,7 @@ def convert_JypB_JypP(sdimage):
         return sdimage
     else: 
         print('SD units {}. NOT OK, needs conversion by user to Jy/beam or Jy/pixel. '.format(myimhead['unit']))
+        # @todo   we should be able to convert K to Jy/beam
         return sys.exit()
 
 
