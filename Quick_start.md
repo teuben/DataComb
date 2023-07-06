@@ -16,7 +16,7 @@ Before following this guide, you should have already:
 
 - Installed CASA 6
 	- Ensure astropy is installed
-- Installed analysisutils
+- Installed analysisUtils
 - Downloaded any example data and know the path to the data
 - Configured your local paths (see [Preparation.md](Preparation.md))
 
