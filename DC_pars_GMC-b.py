@@ -17,9 +17,11 @@ step_title = {0: 'Concat',
               }              
 
 thesteps=[0,1,2,3,4,5,6,7,8]
+thesteps=[0,1]
 
-dryrun = False    # False to execute combination, True to gather filenames only
+dryrun       = False    # False to execute combination, True to gather filenames only
  
+no_transform = True     # models do no need a transform to align SD and INT
 
 
 
@@ -102,7 +104,8 @@ t_maxscale = -1               # for 'MS': number for largest scale size ('arcsec
 ### user interaction and iterations and threshold
 
 inter       = 'nIA'           # interactive ('IA') or non-interactive ('nIA')
-nit         = 10000000        # number of iterations
+nit         = 100000          # number of iterations
+nit         = 100             # number of iterations
 t_cycleniter= -1              # number of minor cycle iterations before major cycle is triggered. default: -1 (CASA determined - usually sufficient), poor PSF: few 10s (low SNR) to ~ 1000 (high SNR)
 t_threshold = ''              # e.g. '0.1mJy', can be left blank -> DC_run will estimate from SD-INT-AM mask for all other masking modes, too
 
@@ -114,8 +117,8 @@ masking             = 'SD-INT-AM'    # 'UM' (user mask), 'SD-INT-AM' (SD+INT+AM 
 t_mask              = ''      # specify for 'UM', mask name
 t_pbmask            = 0.2     # specify for 'PM', cut-off level
 t_sidelobethreshold = 2.0     # specify for 'AM', default: 2.0 
-t_noisethreshold    = 4.25    # specify for 'AM', default: 4.25 
-t_lownoisethreshold = 1.5     # specify for 'AM', default: 1.5             
+t_noisethreshold    = 6.0     # specify for 'AM', default: 4.25 
+t_lownoisethreshold = 3.0     # specify for 'AM', default: 1.5             
 t_minbeamfrac       = 0.3     # specify for 'AM', default: 0.3 
 t_growiterations    = 75      # specify for 'AM', default: 75 
 t_negativethreshold = 0.0     # specify for 'AM', default: 0.0 
@@ -127,7 +130,7 @@ fniteronusermask    = 0.6
 theoreticalRMS = False        # use the theoretical RMS from the template image's 'sumwt', instead of measuring the RMS in a threshregion and cont_chans range of a template image
 smoothing    = 1.             # smoothing of the threshold mask (by 'smoothing x beam')
 threshregion = ''             # emission free region in template continuum or channel image
-RMSfactor    = 0.5            # continuum rms level (not noise from emission-free regions but entire image)
+RMSfactor    = 1.0            # continuum rms level (not noise from emission-free regions but entire image)
 cube_rms     = 3.             # cube noise (true noise) x this factor
 cont_chans   = ''             # line free channels for cube rms estimation
 sdmasklev    = 0.3            # maximum x this factor = threshold for SD mask
@@ -180,8 +183,8 @@ skymodel = a12m[0].replace('.ms','.skymodel')    # model used for simulating the
 
 
 assessment_thresh = 0.01        # default: None, option: None, 'clean-thresh', or flux value(float, translated units: Jy/bm), 
-                                       # threshold mask to exclude low SNR pixels, if None, use rms measurement from threshold_mask for tclean (see SD-INT-AM)
-                                       # also used as lower flux limit for moment 0 map creation
+                                # threshold mask to exclude low SNR pixels, if None, use rms measurement from threshold_mask
+                                # for tclean (see SD-INT-AM) - also used as lower flux limit for moment 0 map creation
 
 #pbval = 0.6                # PB-mask cut-off level
 
