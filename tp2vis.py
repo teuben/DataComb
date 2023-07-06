@@ -867,6 +867,13 @@ def tp2vis(infile, outfile, ptg, maxuv=10.0, rms=None, nvgrp=4, deconv=True, win
         tb.putcol('TIME_CENTROID',time1)
         tb.close()
 
+    if True:
+        tb.open(outfile)   # read-only
+        data = tb.getcol("DATA")
+        std = data.std()
+        print('DATA std',std)
+        tb.close()
+
     if delimage:
         os.system('rm -rf %s' % imagename)
 
@@ -1748,6 +1755,7 @@ def tp2vispl(mslist, ampPlot=True, uvmax = 150.0, uvzoom=50.0, uvbin=0.5, show=F
     """
 
     print("TP2VISPL: Plot MSs - ignores flags")
+    print("PJT",mslist)
 
     # Parameters
     # ----------
@@ -1778,7 +1786,8 @@ def tp2vispl(mslist, ampPlot=True, uvmax = 150.0, uvzoom=50.0, uvbin=0.5, show=F
             clist.append('r')                   # grean for 12m
         else:
             return                              # otherwise index error
-        
+
+    print("PJT clist:",clist)
 
     # Open reference MS (preferably, TP) and obtain max flux channel
     # --------------------------------------------------------------
@@ -1906,6 +1915,7 @@ def tp2vispl(mslist, ampPlot=True, uvmax = 150.0, uvzoom=50.0, uvbin=0.5, show=F
         # ---------------------------------------------
 
         idx = wt > 0.0
+        print("PJT",wt)
         uu  = uu[idx]
         vv  = vv[idx]
         wt  = wt[idx]
@@ -1917,7 +1927,7 @@ def tp2vispl(mslist, ampPlot=True, uvmax = 150.0, uvzoom=50.0, uvbin=0.5, show=F
 
         # Calculate averages in bins
         # --------------------------
-
+        print("PJT",uvdist,bin)
         uvbins   = np.arange(0.0,uvdist.max() + bin, bin)
         digit    = np.digitize(uvdist,uvbins)
         uvarea   = np.pi*np.diff(uvbins*uvbins)

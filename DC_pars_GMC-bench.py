@@ -17,6 +17,8 @@ step_title = {0: 'Concat',
               }              
 
 thesteps=[0,1,2,3,4,5,6,7,8]
+thesteps=[0,1,2,3,4,5,7]  # 19.72 minutes
+thesteps=[6]
 
 dryrun = False         # False to execute combination, True to gather filenames only
 

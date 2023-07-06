@@ -3,7 +3,7 @@
 #  to work with, and edit parameters here, copy this script to DC_pars.py to be used by your DC_script.py
 
 #  Data and procedure are described here:
-#        https://casaguides.nrao.edu/index.php?title=M100_Band3_Combine_5.4
+#        https://casaguides.nrao.edu/index.php?title=M100_Band3_Combine_6.2
 
 step_title = {0: 'Concat',
               1: 'Prepare the SD-image',
@@ -17,9 +17,12 @@ step_title = {0: 'Concat',
               }
 
 thesteps=[0,1,2,3,4,5,6,7,8]
+# [0,1]   1121 seconds = 18.68 minutes = 0.31 hours
+# [2]     2568 seconds = 42.8 minutes = 0.71 hours   8 proc
+#         2023 seconds = 33.72 minutes = 0.56 hours  1 proc
+# 'thesteps=[7]
 
 dryrun = False    # False to execute combination, True to gather filenames only
-
  
 
 
@@ -34,11 +37,20 @@ dryrun = False    # False to execute combination, True to gather filenames only
 pathtoconcat = _s4p_data #+ '/M100/'
 pathtoimage  = _s4p_work + '/M100/'
 
+
+# or from the ALMA archives
 # to quote the casaguide, "In order to run this guide you will need the following three files:"
 _7ms  = '/M100_Band3_7m_CalibratedData/M100_Band3_7m_CalibratedData.ms'
 _12ms = '/M100_Band3_12m_CalibratedData/M100_Band3_12m_CalibratedData.ms'
 _sdim = '/M100_Band3_ACA_ReferenceImages_5.1/M100_TP_CO_cube.spw3.image.bl'
 
+# from our M100_big.tar file
+_7ms  = '/M100_Band3_7m_CalibratedData.ms'
+_12ms = '/M100_Band3_12m_CalibratedData.ms'
+_sdim = '/M100_TP_CO_cube.spw3.image.bl'          #   what is:   M100_TP_CO_cube.spw3.image/
+_sdim = '/M100_TP.fits'
+_sdim = '/M100-LMT.fits'   # bad ?
+_sdim = '/M100_TP.im'      # ok
 
 # setup for concat (step 0)
 
@@ -68,7 +80,10 @@ sdbase         = pathtoimage + 'M100-B3'  # path + sd image base name
 						
 t_spw         = '' 
 t_field       = ''
-t_imsize      = 560  
+t_imsize      = 560
+t_imsize      = 600
+t_imsize      = 660
+t_imsize      = 720
 t_cell        = '0.5arcsec' 
 t_phasecenter = 'J2000 12h22m54.9 +15d49m15'  	
 
@@ -96,7 +111,8 @@ t_maxscale = -1               # for 'MS': number for largest scale size ('arcsec
 ### user interaction and iterations and threshold
 
 inter       = 'nIA'           # interactive ('IA') or non-interactive ('nIA')
-nit         = 10000000        # number of iterations
+nit         = 100000          # number of iterations
+nit         = 100             # PJT number of iterations for quicker test
 t_cycleniter= -1              # number of minor cycle iterations before major cycle is triggered. default: -1 (CASA determined - usually sufficient), poor PSF: few 10s (low SNR) to ~ 1000 (high SNR)
 t_threshold = ''              # e.g. '0.1mJy', can be left blank -> DC_run will estimate from SD-INT-AM mask for all other masking modes, too
 
