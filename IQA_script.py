@@ -1657,7 +1657,7 @@ def get_values(FITSfile,xmin,xmax,xstep,inlog=False):
                 Histogram = copy.deepcopy(hist.T)   
             else:
                 Histogram = np.column_stack((Histogram,hist.T))
-            Histogram = np.float64(Histogram)
+            Histogram = float(Histogram)
     return nchan, bins_histo, bins_mids, Histogram
 
 
@@ -1693,7 +1693,7 @@ def plot_Apar(image2plot,Nplots,Ny,title,plotxlabel,showchannels=[0,0]):
     nchans, b, mids, h = get_values(FITSfile=image2plot,xmin=xminplot,xmax=xmaxplot,xstep=0.1,inlog=False) # h is in lin-space
     for i in np.arange(0,nchans):
         plt.step(h[:,i],mids,color="grey",linewidth=1, alpha=0.1)
-    h = h.astype(np.float) # convert to float
+    h = h.astype(float) # convert to float
     h[h==np.nan] = 0
     h[h == 0] = np.nan
     # We use linear weights rather than log10
